@@ -42,16 +42,78 @@ flowchart LR
    - Criação dinâmica de múltiplos blocos de demandas/atividades técnicas.
    - Upload múltiplo de fotos com grade de 3 colunas no PDF.
 
-4. **Geração de PDF Corporativo em A4 Retrato (Padrão Espiral):**
+4. **Geração de PDF Corporativo em A4 Retrato (Padrão Oficial):**
    - Dimensões exatas: `210mm x 297mm`.
    - Paginação automática inteligente — nunca corta fotos ou tabelas ao meio.
-   - Quadro de Assinatura Digital com suporte a touch screen.
+   - Quadro de Assinatura Digital com suporte a touch screen e validação de nome em tempo real.
    - Pré-visualização modal antes de baixar.
 
 5. **Estratégia Serverless de Envio por E-mail (3 opções):**
    - **Opção A — Vercel + Resend:** PDF real em anexo via Serverless Function.
    - **Opção B — EmailJS:** Envio direto do navegador, sem backend.
    - **Opção C — Mailto:** Abre o cliente de e-mail nativo (Gmail, Outlook).
+
+---
+
+## 📋 Mapeamento Completo dos Campos Disponíveis
+
+A estrutura de dados do Reporta.AI é diagramada com fidelidade milimétrica para atender às exigências de fiscalização técnica, auditorias contratuais e vistorias periciais em campo:
+
+### 1. Cabeçalho & Dados da Empresa Emissora
+| Campo | Descrição | Persistência |
+|---|---|---|
+| **Logotipo da Empresa** | Upload de imagem corporativa (PNG, JPG, WEBP) renderizada no topo esquerdo do relatório. | `localStorage` |
+| **Razão Social / Nome** | Nome empresarial oficial ou nome fantasia da contratada. | `localStorage` |
+| **CNPJ / CPF** | Registro tributário do prestador de serviços. | `localStorage` |
+| **Telefone / WhatsApp** | Canal direto de atendimento técnico da empresa. | `localStorage` |
+| **E-mail Institucional** | E-mail para contato e recebimento de comprovantes. | `localStorage` |
+| **Título do Documento** | Título principal da folha (ex: *Relatório de Tarefas*, *Relatório Técnico de Campo*). | `localStorage` |
+| **Endereço da Sede** | Logradouro completo, bairro, cidade e UF da sede da empresa. | `localStorage` |
+
+### 2. Identificação da Ordem de Serviço & Empreendimento
+| Campo | Descrição | Exemplo |
+|---|---|---|
+| **Empreendimento / Identificador** | Nome do condomínio, indústria, complexo comercial ou obra. | `CONDOMÍNIO RESIDENCIAL JARDINS DO LAGO` |
+| **Nº O.S.** | Código único de identificação da Ordem de Serviço. | `75531396` ou `OS-2026-0842` |
+| **Código Externo** | Identificador de sistema ERP legado ou ordem do cliente (opcional). | `MANUT-JARD-04` |
+
+### 3. Informações do Cliente
+| Campo | Descrição | Exemplo |
+|---|---|---|
+| **Falar com (Cliente)** | Nome do síndico, gestor predial, fiscal do contrato ou responsável no local. | `CONDOMINIO RESIDENCIAL JARDINS DO LAGO` |
+| **CPF / CNPJ do Cliente** | Documento oficial do contratante. | `18.825.608/0001-10` |
+| **Telefone do Cliente** | Contato telefônico da administração local ou portaria. | `(85) 3133-6700` |
+| **E-mail do Cliente** | E-mail de destino para despacho direto do PDF de conclusão. | `administracao@jardinsdolago.com.br` |
+
+### 4. Informações da Atividade & Controle Cronológico
+| Campo | Descrição | Exemplo |
+|---|---|---|
+| **Técnico Responsável** | Nome do líder da equipe ou técnico executor. | `Harlysson Sousa` / `Carlos Eduardo` |
+| **Tipo de Tarefa** | Categoria da intervenção. | `Manutenção Preventiva / Corretiva / Manejo` |
+| **Data / Hora Prevista** | Agendamento prévio registrado. | `30/10/2026 às 08:00` |
+| **Chegada** | Horário de apresentação da equipe na portaria/local. | `30/10/2026 às 07:50:46` |
+| **Check-In** | Carimbo de início efetivo dos trabalhos (com botão 1-clique). | `30/10/2026 às 07:51:34` |
+| **Check-Out** | Carimbo de término das atividades em campo. | `31/10/2026 às 07:50:40` |
+| **Status de Finalização** | Condição de encerramento da O.S. | `Finalizada no local` / `Finalizada manualmente` |
+| **Endereço da Ocorrência** | Local físico exato onde o serviço foi executado. | `AVENIDA ABOLIÇÃO, 2311 - MEIRELES - FORTALEZA/CE` |
+| **Orientação / Plano** | Diretriz contratual ou escopo do plano de manutenção. | `Plano de Manutenção - 2x semanais (8x/mês)` |
+| **Relato de Execução Geral** | Parecer descritivo e síntese das atividades desenvolvidas. | `Revisão geral dos subsistemas e testes de conformidade.` |
+
+### 5. Demandas Dinâmicas & Evidências Fotográficas
+| Componente | Descrição e Comportamento |
+|---|---|
+| **Título do Questionário / Demanda** | Campo customizável por bloco (ex: *Questionário: Manut. Elétrica Preventiva*, *Área Verde 01: Gramado Frontal*). |
+| **Descrição da Demanda** | Detalhamento da anomalia identificada, solicitação do cliente ou escopo específico do subsistema. |
+| **Observação / Parecer Técnico** | Conclusão do técnico sobre a causa raiz, intervenção realizada, peças substituídas ou recomendações futuras. |
+| **Fotos Antes / Depois / Evidências** | Upload de fotografias com compressão automática, distribuídas no PDF em **grade de 3 colunas** de alta definição. |
+| **Múltiplos Blocos Dinâmicos** | Possibilidade de criar **N demandas**, gerando automaticamente páginas subsequentes A4 no PDF sem quebra de leiaute. |
+
+### 6. Validação & Assinatura no Local
+| Componente | Descrição e Comportamento |
+|---|---|
+| **Nome do Responsável / Recebedor** | Nome digitado no momento do aceite na presença do cliente. |
+| **Quadro Touch Screen de Assinatura** | Captura de rubrica digital direta via tela touch (dedo ou caneta) ou mouse, estendida ao rodapé da última página do PDF. |
+| **Conferência em Tempo Real** | Painel visual que valida a completude do aceite (*Nome informado + Rubrica desenhada*). |
 
 ---
 
