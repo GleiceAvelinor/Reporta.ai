@@ -1,14 +1,13 @@
 # Reporta.AI ⚡
-### Plataforma SaaS Serverless para Relatórios Técnicos de Campo em A4 Paisagem
-
+### Plataforma SaaS Serverless para Relatórios Técnicos de Campo em A4 Retrato (Padrão Oficial Espiral Engenharia)
 
 ---
 
 ## 📌 Visão Geral do Projeto
 
-O **Reporta.AI** é uma plataforma ágil, autônoma e serverless (`HTML5 + Tailwind CSS + Vanilla JS`) desenvolvida para digitalizar rotinas de vistoria e transformar atividades de campo em relatórios técnicos de alto padrão corporativo.
+O **Reporta.AI** é uma plataforma ágil, autônoma e serverless (`HTML5 + Tailwind CSS + Vanilla JS`) desenvolvida para digitalizar rotinas de vistoria e transformar atividades de campo em relatórios técnicos de alto padrão corporativo com layout técnico limpo e fiel ao modelo operacional da **Espiral Engenharia Elétrica**.
 
-Projetada para atender com excelência desde **prestadores de serviços em geral** até **engenheiros, eletrotécnicos e equipes de manutenção predial e industrial**, a ferramenta elimina o retrabalho administrativo ao consolidar Ordens de Serviço (O.S.), auditoria fotográfica de *"antes e depois"* e coleta de assinaturas digitais em PDFs executivos no padrão A4 Paisagem — prontos para emissão e entrega direta no local de atendimento.
+Projetada para atender com excelência desde **prestadores de serviços em geral** até **engenheiros, eletrotécnicos e equipes de manutenção predial e industrial**, a ferramenta elimina o retrabalho administrativo ao consolidar Ordens de Serviço (O.S.), auditoria fotográfica em grade de 3 colunas e coleta de assinaturas digitais em PDFs executivos no padrão **A4 Retrato (Portrait: 210mm × 297mm)** — prontos para emissão e entrega direta no local de atendimento.
 
 A aplicação opera **100% no navegador (Client-Side)** com arquitetura serverless para despacho e arquivamento automatizado por e-mail, dispensando servidores dedicados, bancos de dados relacionais e custos recorrentes de infraestrutura.
 
@@ -16,7 +15,7 @@ A aplicação opera **100% no navegador (Client-Side)** com arquitetura serverle
 ```mermaid
 flowchart LR
     A["👷‍♂️ Técnico em Campo<br/>(Celular / Tablet)"] -->|1. Check-in & Fotos| B["⚡ Reporta.AI<br/>(Client-Side no Browser)"]
-    B -->|2. Assinatura Touch| C["📄 Compilação A4 Paisagem<br/>(jsPDF + html2canvas)"]
+    B -->|2. Assinatura Touch| C["📄 Compilação A4 Retrato<br/>(jsPDF + html2canvas)"]
     C -->|3. Download Instantâneo| D["📦 PDF Técnico de Alta Definição"]
     C -->|4. Despacho Serverless| E["📧 E-mail do Cliente & Backup da Empresa<br/>(Histórico 100% Gratuito)"]
 ```
@@ -50,11 +49,11 @@ flowchart LR
      - 🔵 **EVIDÊNCIA**
    - Campo de legenda individual por foto e parecer técnico por subsistema.
 
-4. **Geração de PDF Corporativo em A4 Paisagem (Landscape):**
-   - Diagramação rigorosa seguindo o padrão de grandes multinacionais e empreiteiras de engenharia elétrica (como Espiral Engenharia).
-   - Dimensões exatas de A4 Paisagem: `297mm x 210mm`.
+4. **Geração de PDF Corporativo em A4 Retrato (Padrão Limpo Oficial Espiral):**
+   - Diagramação rigorosa seguindo o padrão oficial da Espiral Engenharia Elétrica (com tabelas de bordas pretas, faixas de cabeçalho cinza e fotos organizadas em grade de 3 colunas).
+   - Dimensões exatas de A4 Retrato: `210mm x 297mm`.
    - Paginação automática inteligente: nunca corta fotos ou tabelas ao meio.
-   - Quadro de Assinatura Digital dupla (Técnico Líder e Aceite do Cliente) com suporte a touch screen em smartphones e tablets.
+   - Quadro de Assinatura Digital com suporte a touch screen (dedo ou caneta) em smartphones e tablets.
    - Pré-visualização modal interativa com navegação de páginas antes de imprimir ou baixar.
 
 5. **Estratégia Serverless de Envio e Armazenamento via E-mail:**

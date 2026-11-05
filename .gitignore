@@ -22,3 +22,6 @@ yarn-error.log*
 # Antigravity / Gemini logs
 .gemini/
 
+
+.vercel
+.env*
