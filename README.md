@@ -1,11 +1,11 @@
 # Reporta.AI ⚡
-### Plataforma SaaS Serverless para Relatórios Técnicos de Campo em A4 Retrato (Padrão Oficial Espiral Engenharia)
+### Plataforma SaaS Serverless para Relatórios Técnicos de Campo em A4 Retrato 
 
 ---
 
 ## 📌 Visão Geral do Projeto
 
-O **Reporta.AI** é uma plataforma ágil, autônoma e serverless (`HTML5 + Tailwind CSS + Vanilla JS`) desenvolvida para digitalizar rotinas de vistoria e transformar atividades de campo em relatórios técnicos de alto padrão corporativo com layout técnico limpo e fiel ao modelo operacional da **Espiral Engenharia Elétrica**.
+O **Reporta.AI** é uma plataforma ágil, autônoma e serverless (`HTML5 + Tailwind CSS + Vanilla JS`) desenvolvida para digitalizar rotinas de vistoria e transformar atividades de campo em relatórios técnicos de alto padrão corporativo com layout técnico limpo.
 
 Projetada para atender com excelência desde **prestadores de serviços em geral** até **engenheiros, eletrotécnicos e equipes de manutenção predial e industrial**, a ferramenta elimina o retrabalho administrativo ao consolidar Ordens de Serviço (O.S.), auditoria fotográfica em grade de 3 colunas e coleta de assinaturas digitais em PDFs executivos no padrão **A4 Retrato (Portrait: 210mm × 297mm)** — prontos para emissão e entrega direta no local de atendimento.
 
