@@ -1,9 +1,5 @@
 # Reporta.AI ⚡
-<<<<<<< HEAD
 ### Plataforma SaaS Serverless para Relatórios Técnicos de Campo em A4 Retrato
-=======
-### Plataforma SaaS Serverless para Relatórios Técnicos de Campo em A4 Retrato 
->>>>>>> ac0c1713fcc428908ae4bd2519c92c615e8059ad
 
 ---
 
@@ -26,7 +22,7 @@ flowchart LR
 
 ### 🎯 Problema vs. Solução
 - **Sem o Reporta.AI:** Fotos perdidas no WhatsApp, pranchetas de papel amassadas, horas perdidas à noite digitando relatórios no Word/Excel e atraso no faturamento do serviço.
-- **Com o Reporta.AI:** Documentação padronizada no ato da vistoria, fotos etiquetadas com tags coloridas (*Antes/Depois*), aceite do cliente coletado na tela via assinatura touch e envio imediato do PDF por e-mail.
+- **Com o Reporta.AI:** Documentação padronizada no ato da vistoria, fotos etiquetadas, aceite do cliente coletado na tela via assinatura touch e envio imediato do PDF por e-mail.
 
 ---
 
@@ -36,96 +32,146 @@ flowchart LR
    - Upload de logotipo da contratada com preview em tempo real.
    - Compressão client-side em canvas para evitar lentidão ou estouro de memória.
    - Armazenamento automático no `localStorage` do navegador (a empresa preenche seus dados cadastrais uma única vez).
-   - Dados editáveis: Razão Social, CNPJ, Telefone, E-mail, Registro CREA/CFT e Endereço da Sede.
+   - Dados editáveis: Razão Social, CNPJ, Telefone, E-mail e Endereço da Sede.
 
 2. **Gestão Completa de O.S. e Cliente:**
-   - Gerador de número de Ordem de Serviço em 1 clique (`OS-YYYY-XXXX`).
-   - Seletor de Tipo de Tarefa: Preventiva, Corretiva, Preditiva (Termografia), Comissionamento, Laudo NR-10/NBR 5410.
    - Botão para carimbagem automática de data e hora atual (Check-in e Check-out).
    - Endereço da intervenção e escopo técnico solicitado.
 
 3. **Relato Técnico de Execução & Fotos ("Antes e Depois"):**
    - Criação dinâmica de múltiplos blocos de demandas/atividades técnicas.
-   - Upload múltiplo de fotos com etiquetagem automática e customizável:
-     - 🔴 **ANTES**
-     - 🟡 **DURANTE**
-     - 🟢 **DEPOIS**
-     - 🔵 **EVIDÊNCIA**
-   - Campo de legenda individual por foto e parecer técnico por subsistema.
+   - Upload múltiplo de fotos com grade de 3 colunas no PDF.
 
-4. **Geração de PDF Corporativo em A4 Retrato (Padrão Limpo Oficial Espiral):**
-   - Diagramação rigorosa seguindo o padrão oficial da Espiral Engenharia Elétrica (com tabelas de bordas pretas, faixas de cabeçalho cinza e fotos organizadas em grade de 3 colunas).
-   - Dimensões exatas de A4 Retrato: `210mm x 297mm`.
-   - Paginação automática inteligente: nunca corta fotos ou tabelas ao meio.
-   - Quadro de Assinatura Digital com suporte a touch screen (dedo ou caneta) em smartphones e tablets.
-   - Pré-visualização modal interativa com navegação de páginas antes de imprimir ou baixar.
+4. **Geração de PDF Corporativo em A4 Retrato (Padrão Espiral):**
+   - Dimensões exatas: `210mm x 297mm`.
+   - Paginação automática inteligente — nunca corta fotos ou tabelas ao meio.
+   - Quadro de Assinatura Digital com suporte a touch screen.
+   - Pré-visualização modal antes de baixar.
 
-5. **Estratégia Serverless de Envio e Armazenamento via E-mail:**
-   - **Opção A - Vercel Serverless Function (`/api/send-email.js`):** Envia o PDF compilado em alta resolução como anexo de e-mail real utilizando a API da Resend (100% gratuito).
-   - **Opção B - EmailJS (Client-Side):** Permite disparar e-mails diretamente do navegador com resumo executivo para arquivamento histórico na caixa de entrada sem precisar de backend.
-   - **Opção C - Cliente Local (Mailto):** Abre o Outlook ou Gmail nativo do dispositivo já preenchido para envio rápido com o PDF baixado.
+5. **Estratégia Serverless de Envio por E-mail (3 opções):**
+   - **Opção A — Vercel + Resend:** PDF real em anexo via Serverless Function.
+   - **Opção B — EmailJS:** Envio direto do navegador, sem backend.
+   - **Opção C — Mailto:** Abre o cliente de e-mail nativo (Gmail, Outlook).
 
 ---
 
-## ⏱️ Guia de Deploy Gratuito na Vercel em Menos de 5 Minutos
+## 📧 Como Testar o Envio de E-mail
 
-Você pode colocar o **Reporta.AI** em produção e obter uma URL pública segura com SSL (`https://seu-app.vercel.app`) de forma 100% gratuita seguindo um dos métodos abaixo:
-
-### Método 1: Pelo Navegador (Sem Instalar Nada) - Mais Fácil
-
-1. Acesse **[vercel.com](https://vercel.com)** e crie uma conta gratuita (ou faça login com seu GitHub).
-2. Se o seu projeto estiver em um repositório no GitHub:
-   - Clique em **"Add New..."** ➔ **"Project"**.
-   - Selecione o repositório `Reporta.AI` e clique em **"Import"**.
-   - A Vercel detectará automaticamente que é um projeto estático (`Framework Preset: Other`).
-   - Clique em **"Deploy"**.
-3. Em menos de 30 segundos sua URL estará ativa!
-
-> **Dica para Anexo PDF Automático via Resend:**
-> No painel da Vercel, acesse: **Settings ➔ Environment Variables** e adicione a variável:
-> - **Key:** `RESEND_API_KEY`
-> - **Value:** `sua_chave_resend_aqui` (obtida gratuitamente em [resend.com](https://resend.com)).
+Existem três formas de testar, da mais simples à mais completa:
 
 ---
 
-### Método 2: Pelo Terminal via Vercel CLI (Desenvolvedores)
+### ✉️ Opção 1 — Mailto (funciona agora, sem configuração)
 
-1. Abra o terminal (PowerShell ou Bash) na pasta do projeto:
-   ```bash
-   cd c:\Users\ednar\OneDrive\Documentos\Reporta.AI
-   ```
+No app, clique em **"Enviar"** → botão **Mailto**.
 
-2. Instale a Vercel CLI globalmente (se ainda não tiver):
-   ```bash
-   npm install -g vercel
-   ```
+Isso abre seu cliente de e-mail (Gmail, Outlook) com assunto e destinatário preenchidos automaticamente.
 
-3. Execute o comando de deploy:
-   ```bash
-   vercel
-   ```
-   - Pressione `Enter` para confirmar as opções padrão:
-     - Set up and deploy? `y`
-     - Which scope do you want to deploy to? `Seu usuário`
-     - Link to existing project? `n`
-     - What's your project's name? `reporta-ai`
-     - In which directory is your code located? `./`
+> **Limitação:** Não envia o PDF como anexo — apenas abre o cliente de e-mail.
 
-4. Para publicar em produção direta:
-   ```bash
-   vercel --prod
+---
+
+### 📨 Opção 2 — EmailJS (funciona no browser, sem backend)
+
+**Tempo estimado: 5 minutos. Gratuito até 200 e-mails/mês.**
+
+1. Acesse [emailjs.com](https://www.emailjs.com) e crie uma conta gratuita.
+2. Vá em **Email Services** → conecte seu Gmail ou outro provedor.
+3. Vá em **Email Templates** → crie um template simples:
    ```
+   Assunto: {{subject}}
+   Para:    {{to_email}}
+   Corpo:   {{message}}
+   ```
+4. Colete as três credenciais:
+   - **Service ID** (ex: `service_abc123`)
+   - **Template ID** (ex: `template_xyz456`)
+   - **Public Key** (em Account → API Keys)
+5. No Reporta.AI, clique em **"Enviar"** → **"Configurar chaves EmailJS →"** → cole as chaves → **Salvar**.
+6. Clique em **"Enviar com PDF"** e verifique sua caixa de entrada.
+
+---
+
+### 🚀 Opção 3 — Vercel + Resend (produção real, PDF em anexo ✅)
+
+Esta é a opção completa: envia o PDF gerado como anexo real de e-mail.
+
+#### Passo 1 — Criar conta na Resend
+
+1. Acesse [resend.com](https://resend.com) e crie uma conta gratuita.
+2. Vá em **API Keys** → **Create API Key** → copie a chave (começa com `re_...`).
+
+> **Plano gratuito:** 100 e-mails/dia · 3.000/mês
+
+#### Passo 2 — Fazer o deploy na Vercel
+
+1. Acesse [vercel.com/new](https://vercel.com/new).
+2. Clique em **"Import Git Repository"** e selecione `GleiceAvelinor/Reporta.ai`.
+3. Clique em **Deploy** e aguarde (~30 segundos).
+
+#### Passo 3 — Adicionar a variável de ambiente
+
+No painel do projeto na Vercel:
+1. Vá em **Settings → Environment Variables**.
+2. Adicione:
+   - **Name:** `RESEND_API_KEY`
+   - **Value:** `re_SuaChaveAqui`
+3. Clique em **Save** → vá em **Deployments** → clique em **Redeploy**.
+
+#### Passo 4 — Testar via terminal (PowerShell)
+
+Substitua `SEU-DEPLOY` pela URL do seu projeto na Vercel:
+
+```powershell
+$body = '{"to":"gleiceavelinor@gmail.com","subject":"Teste Reporta.AI","html":"<p>PDF em anexo funcionando!</p>"}'
+Invoke-RestMethod -Uri "https://SEU-DEPLOY.vercel.app/api/send-email" -Method POST -Body $body -ContentType "application/json"
+```
+
+Se a resposta for `success: true`, o envio está funcionando. ✅
+
+#### Comparativo rápido
+
+| Opção | Configuração | PDF em Anexo | Limite Gratuito |
+|---|---|---|---|
+| Mailto | Nenhuma | ❌ | Ilimitado |
+| EmailJS | 5 min | ❌ | 200/mês |
+| Vercel + Resend | 10 min | ✅ | 3.000/mês |
+
+---
+
+## ⏱️ Guia de Deploy Gratuito na Vercel
+
+### Método 1: Pelo Navegador (Mais Fácil)
+
+1. Acesse [vercel.com](https://vercel.com) e faça login com sua conta GitHub.
+2. Clique em **"Add New..."** → **"Project"**.
+3. Selecione o repositório `Reporta.AI` e clique em **"Import"**.
+4. A Vercel detectará automaticamente que é um projeto estático.
+5. Clique em **"Deploy"** — em menos de 30 segundos sua URL estará ativa.
+
+> **Para ativar o envio de e-mail com PDF:**
+> Em **Settings → Environment Variables**, adicione `RESEND_API_KEY` com sua chave da Resend.
+
+---
+
+### Método 2: Pelo Terminal (Vercel CLI)
+
+```bash
+# Na pasta do projeto
+npm install -g vercel
+vercel --prod
+```
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
-- **HTML5 & Vanilla JavaScript ES6+:** Arquitetura limpa, sem overhead de frameworks ou builds complexos.
-- **Tailwind CSS (CDN):** Estilização corporativa moderna com paleta de engenharia (Slate, Amber, Emerald, Sky).
-- **jsPDF (v2.5.1):** Motor de compilação de documentos em formato A4 Paisagem.
-- **html2canvas (v1.4.1):** Renderizador vetorial e rasterizador de alta fidelidade para geração de evidências.
-- **Lucide Icons:** Conjunto de ícones vetoriais leves.
-- **EmailJS / Resend API:** Disparo de notificações e arquivamento serverless.
+- **HTML5 & Vanilla JavaScript ES6+** — arquitetura limpa, sem overhead de frameworks.
+- **Tailwind CSS (CDN)** — estilização moderna com paleta neutra (gray/white).
+- **jsPDF (v2.5.1)** — motor de compilação de documentos A4 Retrato.
+- **html2canvas (v1.4.1)** — rasterizador de alta fidelidade para geração das páginas.
+- **Lucide Icons** — conjunto de ícones vetoriais leves.
+- **EmailJS / Resend API** — despacho serverless de e-mails com anexo PDF.
 
 ---
 
@@ -137,10 +183,9 @@ Reporta.AI/
 ├── vercel.json        # Configuração de roteamento e headers de segurança
 ├── README.md          # Documentação e guia de uso
 └── api/
-    └── send-email.js  # Serverless Function da Vercel para envio de e-mails com anexo PDF
+    └── send-email.js  # Serverless Function para envio de e-mail com anexo PDF (Resend)
 ```
 
 ---
 
 *Desenvolvido com foco em agilidade, produtividade e conformidade técnica para operações de engenharia de campo.*
-
