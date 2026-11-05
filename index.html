@@ -1319,6 +1319,23 @@
             </tr>
           </table>
         `;
+
+        // Se houver apenas 1 demanda no relatório todo, a assinatura DEVE constar na Página 1!
+        if (demandBlocks.length === 1) {
+          p1Html += `
+            <div class="mt-auto pt-4 pb-2 flex flex-col items-center justify-center">
+              <div class="h-14 w-64 flex items-center justify-center mb-1">
+                ${sigImg 
+                  ? `<img src="${sigImg}" class="max-h-12 max-w-full object-contain" alt="Assinatura">` 
+                  : `<div class="italic text-gray-400 text-xs">(Aguardando assinatura)</div>`
+                }
+              </div>
+              <div class="border-t border-black w-64 text-center pt-1 text-[11px] font-medium">
+                ${act.signer ? `Assinado por: ${escapeHtml(act.signer)}` : `<span class="text-gray-400">Assinado por: _______________________</span>`}
+              </div>
+            </div>
+          `;
+        }
       }
 
       p1.innerHTML = p1Html;
