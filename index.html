@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reporta.AI — Relatórios Técnicos de Campo</title>
+  <title>Reporta.AI — Relatórios Técnicos e Ordens de Serviço</title>
 
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -162,7 +162,7 @@
     <!-- Marca -->
     <div class="flex items-center gap-2.5 shrink-0">
       <span class="text-base font-semibold tracking-tight text-gray-900">Reporta<span class="text-gray-400">.AI</span></span>
-      <span class="hidden sm:inline text-[10px] font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded">A4 Retrato</span>
+      <span class="hidden sm:inline text-[10px] font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded">BETA</span>
     </div>
 
     <!-- Separador -->
@@ -170,10 +170,10 @@
 
     <!-- Ações secundárias -->
     <div class="flex items-center gap-1.5 flex-1">
-      <button type="button" onclick="loadSampleEspiralData()"
+      <button type="button" onclick="loadSampleGardeningData()"
         class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">
         <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-        <span class="hidden sm:inline">Dados de Exemplo</span>
+        <span class="hidden sm:inline">Exemplo Jardinagem</span>
       </button>
       <button type="button" onclick="confirmReset()"
         class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors">
@@ -431,7 +431,7 @@
            BARRA DE AÇÃO FIXA NO RODAPÉ
       ========================================================= -->
       <div class="sticky bottom-4 z-30 bg-white border border-gray-200 shadow-lg rounded-xl px-5 py-3 flex items-center justify-between gap-4">
-        <span class="text-xs text-gray-500 hidden sm:inline">Formato A4 Retrato · Padrão Espiral Engenharia</span>
+        <span class="text-xs text-gray-500 hidden sm:inline">Formato A4 Retrato · Alta Definição</span>
 
         <div class="flex items-center gap-2">
           <button type="button" onclick="previewPDF()"
@@ -502,7 +502,7 @@
         </div>
         <div>
           <label class="field-label">Cópia (backup da empresa)</label>
-          <input type="email" id="modalCcEmail" value="adm.financeiro@espiraleletrica.com" class="field-input">
+          <input type="email" id="modalCcEmail" placeholder="contato@empresa.com" class="field-input">
         </div>
 
         <div class="pt-1 border-t border-gray-100">
@@ -895,122 +895,128 @@
       showToast("Horário de check-in definido!");
     }
 
-    // ================= DADOS OFICIAIS DO RELATÓRIO ESPIRAL ENGENHARIA =================
-    function loadSampleEspiralData() {
-      document.getElementById("companyName").value = "ESPIRAL ENGENHARIA ELETRICA";
-      document.getElementById("companyCnpj").value = "52.960.528/0001-06";
-      document.getElementById("companyPhone").value = "85 9 8778-5560";
-      document.getElementById("companyEmail").value = "adm.financeiro@espiraleletrica.com";
-      document.getElementById("documentTitle").value = "Relatório de tarefas";
-      document.getElementById("companyAddress").value = "AV GODOFREDO MACIEL N° 2238 - MARAPONGA - FORTALEZA/CE";
+    // ================= DADOS DE EXEMPLO: EMPRESA DE JARDINAGEM E PAISAGISMO =================
+    function loadSampleGardeningData() {
+      document.getElementById("companyName").value = "VERDE VIVA JARDINAGEM E PAISAGISMO";
+      document.getElementById("companyCnpj").value = "41.832.910/0001-45";
+      document.getElementById("companyPhone").value = "(85) 9 9123-4567";
+      document.getElementById("companyEmail").value = "contato@verdevivapaisagismo.com.br";
+      document.getElementById("documentTitle").value = "Relatório de Manutenção e Manejo Paisagístico";
+      document.getElementById("companyAddress").value = "RUA DAS PALMEIRAS, 150 - ALDEOTA - FORTALEZA/CE";
 
-      document.getElementById("headerUnitName").value = "LANDSCAPE";
-      document.getElementById("osNumber").value = "75531396";
-      document.getElementById("externalCode").value = "";
-      document.getElementById("clientName").value = "CONDOMINIO LANDSCAPE";
-      document.getElementById("clientCnpj").value = "18.825.608/0001-10";
-      document.getElementById("clientPhone").value = "(85) 3133-6700";
-      document.getElementById("clientEmail").value = "";
+      document.getElementById("headerUnitName").value = "CONDOMÍNIO JARDINS DO LAGO";
+      document.getElementById("osNumber").value = "OS-2026-0842";
+      document.getElementById("externalCode").value = "MANUT-JARD-04";
+      document.getElementById("clientName").value = "CONDOMÍNIO RESIDENCIAL JARDINS DO LAGO";
+      document.getElementById("clientCnpj").value = "12.345.678/0001-90";
+      document.getElementById("clientPhone").value = "(85) 3244-8800";
+      document.getElementById("clientEmail").value = "administracao@jardinsdolago.com.br";
 
-      document.getElementById("techLeader").value = "Harlysson Sousa";
-      document.getElementById("osType").value = "Manutenção Preventiva/ Corretiva";
-      document.getElementById("plannedDate").value = "30/10/2026 às 08:00";
-      document.getElementById("arrivalTime").value = "30/10/2026 às 07:50:46";
-      document.getElementById("checkinTime").value = "30/10/2026 às 07:51:34";
-      document.getElementById("checkoutTime").value = "31/10/2026 às 07:50:40";
-      document.getElementById("finalizedStatus").value = "Finalizada manualmente";
-      document.getElementById("siteAddress").value = "AVENIDA ABOLICAO, 2311, MEIRELES, FORTALEZA, CE, 60.165-082";
-      document.getElementById("scopeDescription").value = "Plano de Manutenção - 2x semanais (8xmês)";
-      document.getElementById("generalExecutionReport").value = "";
-      document.getElementById("signerName").value = "gardenia";
-      updateSignatureLabel("gardenia");
+      document.getElementById("techLeader").value = "Carlos Eduardo - Jardineiro Responsável";
+      document.getElementById("osType").value = "Manutenção Paisagística Periódica / Poda e Adubação";
+      document.getElementById("plannedDate").value = "05/11/2026 às 08:00";
+      document.getElementById("arrivalTime").value = "05/11/2026 às 07:45:10";
+      document.getElementById("checkinTime").value = "05/11/2026 às 07:50:00";
+      document.getElementById("checkoutTime").value = "05/11/2026 às 16:30:00";
+      document.getElementById("finalizedStatus").value = "Finalizada com sucesso no local";
+      document.getElementById("siteAddress").value = "AV. BEIRA MAR, 3500 - MEIRELES - FORTALEZA/CE";
+      document.getElementById("scopeDescription").value = "Plano Quinzenal: Poda de conformação, corte de gramado, adubação foliar e fitossanitária";
+      document.getElementById("generalExecutionReport").value = "Realizado manejo completo das áreas verdes frontais e do entorno da piscina. Sistema de irrigação verificado e operando normalmente.";
+      document.getElementById("signerName").value = "Maria Alice Silveira (Síndica)";
+      updateSignatureLabel("Maria Alice Silveira (Síndica)");
 
-      // Criar logo oficial Espiral
-      createOfficialEspiralLogo();
+      // Criar logo temático de jardinagem verde
+      createGardeningLogo();
 
-      // Criar as 3 demandas fiéis ao relatório da foto
+      // Criar demandas típicas de jardinagem com fotos
       demandBlocks = [
         {
           id: 1,
-          questionnaire: "Questionário: Manut. Elétrica Preventiva e Corretiva_R001",
-          description: "Poste esta sem funcionamento no jardim",
-          observation: "Após correção elétrica voltou a funcionar normalmente",
+          questionnaire: "Área Verde 01: Gramado Frontal e Canteiros Principais",
+          description: "Corte, despraguejamento e alinhamento de bordas do gramado Esmeralda",
+          observation: "Gramado aparado na altura recomendada (4cm), realizado recolhimento integral das aparas e adubação nitrogenada com NPK 10-10-10.",
           photos: [
-            { src: createMockEvidencePhoto("POSTE JARDIM", "#0284c7") }
+            { src: createMockEvidencePhoto("CORTE DE GRAMADO ESMERALDA", "#16a34a") },
+            { src: createMockEvidencePhoto("ALINHAMENTO DE BORDA DE CANTEIRO", "#15803d") },
+            { src: createMockEvidencePhoto("APLICAÇÃO DE ADUBO ORGÂNICO", "#047857") }
           ]
         },
         {
           id: 2,
-          questionnaire: "Questionário: Manut. Elétrica Preventiva e Corretiva_R001",
-          description: "Realizado alguns reparos no jardim que estava ocasionando fugas de corrente e disparando o dr",
-          observation: "Foi feito a correção no jardim e tirado o bypass de 3 dr, não foi localizado no restante do circuito onde estava ocorrendo a fuga",
+          questionnaire: "Área Verde 02: Poda de Árvores, Palmeiras e Arbustos Ornamentais",
+          description: "Poda de limpeza em palmeiras imperiais e contenção de cercas-vivas",
+          observation: "Removidas folhas secas e ramos doentes que ofereciam risco à fiação e passagem de pedestres. Resíduos destinados para compostagem.",
           photos: [
-            { src: createMockEvidencePhoto("QUADRO DE DISJUNTORES E DRs", "#334155") },
-            { src: createMockEvidencePhoto("ACESSO JARDIM", "#16a34a") },
-            { src: createMockEvidencePhoto("CAIXA DE PASSAGEM NO GRAMADO", "#0f766e") },
-            { src: createMockEvidencePhoto("CABOS EM COQUEIRO", "#ca8a04") },
-            { src: createMockEvidencePhoto("MANUTENÇÃO DE CABEAMENTO", "#b45309") },
-            { src: createMockEvidencePhoto("INSPEÇÃO TÉCNICA EM CAMPO", "#1e293b") }
+            { src: createMockEvidencePhoto("PODA DE LIMPEZA EM PALMEIRA", "#166534") },
+            { src: createMockEvidencePhoto("CONFORMAÇÃO DE CERCA-VIVA", "#15803d") },
+            { src: createMockEvidencePhoto("CANTEIRO DE FLORES REVITALIZADO", "#059669") }
           ]
         },
         {
           id: 3,
-          questionnaire: "Questionário: Manut. Elétrica Preventiva e Corretiva_R001",
-          description: "3 lâmpadas de poste ficaram em funcionamento no jardim",
-          observation: "Foi realizado s correção no circuito elétrico nos postes ficando pendente a correção em 3 postes, precisa derrubar todos para poder vê de onde vem os cabos e se tem cabo neles",
+          questionnaire: "Área Verde 03: Sistema de Irrigação Automatizada e Drenagem",
+          description: "Revisão de aspersores, desobstrução de bicos e regulagem de temporizador",
+          observation: "Identificado 1 aspersor tipo spray danificado no setor sul, efetuada substituição imediata. Temporizador programado para ciclos às 05:00 e 18:30.",
           photos: [
-            { src: createMockEvidencePhoto("POSTE COM ILUMINAÇÃO", "#0284c7") },
-            { src: createMockEvidencePhoto("POSTE CENTRAL", "#0369a1") },
-            { src: createMockEvidencePhoto("ESCADA E FERRAMENTAS", "#475569") },
-            { src: createMockEvidencePhoto("POSTE DERRUBADO PARA TESTE", "#64748b") },
-            { src: createMockEvidencePhoto("INSPEÇÃO INTERNA DA TUBULAÇÃO", "#334155") }
+            { src: createMockEvidencePhoto("TESTE DE PRESSÃO DOS ASPERSORES", "#0284c7") },
+            { src: createMockEvidencePhoto("ASPERSOR NOVO INSTALADO", "#0369a1") },
+            { src: createMockEvidencePhoto("QUADRO DO CONTROLADOR PROGRAMADO", "#334155") }
           ]
         }
       ];
 
       renderDemandBlocks();
       saveCompanyData();
-      showToast("Dados oficiais da Espiral Engenharia carregados!");
+      showToast("Exemplo de Jardinagem carregado!", "🌱");
     }
 
-    function createOfficialEspiralLogo() {
+    function createGardeningLogo() {
       const c = document.createElement("canvas");
       c.width = 300;
       c.height = 130;
       const ctx = c.getContext("2d");
 
-      // Ícone espiral redondo azul e laranja
-      ctx.fillStyle = "#005baa";
+      // Fundo circular verde
+      ctx.fillStyle = "#16a34a";
       ctx.beginPath();
       ctx.arc(60, 50, 42, 0, Math.PI * 2);
       ctx.fill();
 
+      // Folha estilizada em branco
       ctx.fillStyle = "#ffffff";
       ctx.beginPath();
-      ctx.arc(60, 50, 30, 0, Math.PI * 2);
+      ctx.moveTo(60, 20);
+      ctx.quadraticCurveTo(85, 35, 80, 68);
+      ctx.quadraticCurveTo(60, 78, 60, 78);
+      ctx.quadraticCurveTo(60, 78, 40, 68);
+      ctx.quadraticCurveTo(35, 35, 60, 20);
       ctx.fill();
 
-      ctx.fillStyle = "#f58220";
+      // Nervura central da folha
+      ctx.strokeStyle = "#16a34a";
+      ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.arc(60, 50, 20, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.moveTo(60, 25);
+      ctx.lineTo(60, 72);
+      ctx.stroke();
 
-      ctx.fillStyle = "#ffffff";
+      // Broto interno
+      ctx.fillStyle = "#86efac";
       ctx.beginPath();
-      ctx.arc(60, 50, 10, 0, Math.PI * 2);
+      ctx.arc(60, 60, 5, 0, Math.PI * 2);
       ctx.fill();
 
-      // Texto "espiral"
-      ctx.fillStyle = "#005baa";
-      ctx.font = "bold 30px Arial, sans-serif";
+      // Texto "VERDE VIVA"
+      ctx.fillStyle = "#166534";
+      ctx.font = "bold 19px Arial, sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("espiral", 60, 110);
+      ctx.fillText("VERDE VIVA", 60, 108);
 
-      // Texto "ENGENHARIA ELETRICA"
-      ctx.fillStyle = "#64748b";
+      // Subtítulo
+      ctx.fillStyle = "#15803d";
       ctx.font = "bold 8px Arial, sans-serif";
       ctx.letterSpacing = "1px";
-      ctx.fillText("ENGENHARIA ELETRICA", 60, 122);
+      ctx.fillText("JARDINAGEM E PAISAGISMO", 60, 122);
 
       companyLogoBase64 = c.toDataURL("image/png");
       renderLogoPreview(companyLogoBase64);
