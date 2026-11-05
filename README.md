@@ -1,5 +1,9 @@
 # Reporta.AI ⚡
+<<<<<<< HEAD
 ### Plataforma SaaS Serverless para Relatórios Técnicos de Campo em A4 Retrato
+=======
+### Plataforma SaaS Serverless para Relatórios Técnicos de Campo em A4 Retrato 
+>>>>>>> ac0c1713fcc428908ae4bd2519c92c615e8059ad
 
 ---
 
