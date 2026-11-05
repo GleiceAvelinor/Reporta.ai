@@ -250,34 +250,33 @@
           <!-- Campos -->
           <div class="md:col-span-9 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div class="sm:col-span-2">
-              <label class="field-label">Razão Social *</label>
-              <input type="text" id="companyName" value="ESPIRAL ENGENHARIA ELETRICA"
+              <label class="field-label">Razão Social / Nome da Empresa *</label>
+              <input type="text" id="companyName" value="" placeholder="Ex: Minha Empresa de Manutenção e Serviços"
                 class="field-input" onchange="saveCompanyData()">
             </div>
             <div>
-              <label class="field-label">CNPJ *</label>
-              <input type="text" id="companyCnpj" value="52.960.528/0001-06"
+              <label class="field-label">CNPJ / CPF *</label>
+              <input type="text" id="companyCnpj" value="" placeholder="00.000.000/0001-00"
                 class="field-input" onchange="saveCompanyData()">
             </div>
             <div>
-              <label class="field-label">Telefone</label>
-              <input type="text" id="companyPhone" value="85 9 8778-5560"
+              <label class="field-label">Telefone / WhatsApp</label>
+              <input type="text" id="companyPhone" value="" placeholder="(00) 00000-0000"
                 class="field-input" onchange="saveCompanyData()">
             </div>
             <div>
               <label class="field-label">E-mail</label>
-              <input type="email" id="companyEmail" value="adm.financeiro@espiraleletrica.com"
+              <input type="email" id="companyEmail" value="" placeholder="contato@empresa.com"
                 class="field-input" onchange="saveCompanyData()">
             </div>
             <div>
               <label class="field-label">Título do documento</label>
-              <input type="text" id="documentTitle" value="Relatório de tarefas"
+              <input type="text" id="documentTitle" value="Relatório Técnico de Atividades"
                 class="field-input" onchange="saveCompanyData()">
             </div>
             <div class="sm:col-span-2">
               <label class="field-label">Endereço da Sede</label>
-              <input type="text" id="companyAddress"
-                value="AV GODOFREDO MACIEL N° 2238 - MARAPONGA - FORTALEZA/CE"
+              <input type="text" id="companyAddress" value="" placeholder="Rua, Número, Bairro, Cidade - UF"
                 class="field-input" onchange="saveCompanyData()">
             </div>
           </div>
@@ -301,11 +300,11 @@
 
           <div class="sm:col-span-2">
             <label class="field-label">Empreendimento / Identificador *</label>
-            <input type="text" id="headerUnitName" value="LANDSCAPE" placeholder="Ex: LANDSCAPE" class="field-input font-semibold">
+            <input type="text" id="headerUnitName" value="" placeholder="Ex: CONDOMÍNIO CENTRAL PARK" class="field-input font-semibold">
           </div>
           <div>
             <label class="field-label">Nº O.S. *</label>
-            <input type="text" id="osNumber" value="75531396" class="field-input font-semibold">
+            <input type="text" id="osNumber" value="" placeholder="Ex: 75531396" class="field-input font-semibold">
           </div>
           <div>
             <label class="field-label">Código Externo</label>
@@ -314,15 +313,15 @@
 
           <div class="sm:col-span-2">
             <label class="field-label">Falar com (cliente) *</label>
-            <input type="text" id="clientName" value="CONDOMINIO LANDSCAPE" class="field-input">
+            <input type="text" id="clientName" value="" placeholder="Nome do responsável / síndico" class="field-input">
           </div>
           <div>
             <label class="field-label">CPF / CNPJ do cliente</label>
-            <input type="text" id="clientCnpj" value="18.825.608/0001-10" class="field-input">
+            <input type="text" id="clientCnpj" value="" placeholder="00.000.000/0000-00" class="field-input">
           </div>
           <div>
             <label class="field-label">Telefone do cliente</label>
-            <input type="text" id="clientPhone" value="(85) 3133-6700" class="field-input">
+            <input type="text" id="clientPhone" value="" placeholder="(00) 00000-0000" class="field-input">
           </div>
           <div>
             <label class="field-label">E-mail do cliente</label>
@@ -331,47 +330,45 @@
 
           <div>
             <label class="field-label">Técnico responsável *</label>
-            <input type="text" id="techLeader" value="Harlysson Sousa" class="field-input">
+            <input type="text" id="techLeader" value="" placeholder="Nome do técnico" class="field-input">
           </div>
           <div class="sm:col-span-2">
             <label class="field-label">Tipo de tarefa *</label>
-            <input type="text" id="osType" value="Manutenção Preventiva/ Corretiva" class="field-input">
+            <input type="text" id="osType" value="" placeholder="Ex: Manutenção Preventiva / Corretiva" class="field-input">
           </div>
 
           <div>
             <label class="field-label">Data / Hora prevista</label>
-            <input type="text" id="plannedDate" value="30/10/2026 às 08:00" class="field-input">
+            <input type="text" id="plannedDate" value="" placeholder="DD/MM/AAAA às HH:MM" class="field-input">
           </div>
           <div>
             <label class="field-label">Chegada</label>
-            <input type="text" id="arrivalTime" value="30/10/2026 às 07:50:46" class="field-input">
+            <input type="text" id="arrivalTime" value="" placeholder="DD/MM/AAAA às HH:MM:SS" class="field-input">
           </div>
           <div>
             <label class="field-label">Check-In *</label>
-            <input type="text" id="checkinTime" value="30/10/2026 às 07:51:34" class="field-input">
+            <input type="text" id="checkinTime" value="" placeholder="DD/MM/AAAA às HH:MM:SS" class="field-input">
           </div>
           <div>
             <label class="field-label">Check-Out *</label>
-            <input type="text" id="checkoutTime" value="31/10/2026 às 07:50:40" class="field-input">
+            <input type="text" id="checkoutTime" value="" placeholder="DD/MM/AAAA às HH:MM:SS" class="field-input">
           </div>
           <div class="sm:col-span-2">
             <label class="field-label">Status de finalização</label>
-            <input type="text" id="finalizedStatus" value="Finalizada manualmente" class="field-input">
+            <input type="text" id="finalizedStatus" value="Finalizada no local" placeholder="Ex: Finalizada no local" class="field-input">
           </div>
 
           <div class="sm:col-span-2 lg:col-span-4">
             <label class="field-label">Endereço da ocorrência *</label>
-            <input type="text" id="siteAddress"
-              value="AVENIDA ABOLICAO, 2311, MEIRELES, FORTALEZA, CE, 60.165-082" class="field-input">
+            <input type="text" id="siteAddress" value="" placeholder="Endereço completo da intervenção" class="field-input">
           </div>
           <div class="sm:col-span-2">
             <label class="field-label">Orientação / Plano</label>
-            <input type="text" id="scopeDescription"
-              value="Plano de Manutenção - 2x semanais (8xmês)" class="field-input">
+            <input type="text" id="scopeDescription" value="" placeholder="Ex: Plano de Manutenção Periódica" class="field-input">
           </div>
           <div class="sm:col-span-2">
             <label class="field-label">Relato de execução geral</label>
-            <input type="text" id="generalExecutionReport" placeholder="Opcional" class="field-input">
+            <input type="text" id="generalExecutionReport" placeholder="Observações gerais sobre a execução" class="field-input">
           </div>
 
         </div>
@@ -414,10 +411,10 @@
         <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
             <label class="field-label">Nome de quem assinou *</label>
-            <input type="text" id="signerName" value="gardenia"
+            <input type="text" id="signerName" value="" placeholder="Nome completo do responsável no local"
               class="field-input" oninput="updateSignatureLabel(this.value)">
             <p class="mt-1.5 text-[11px] text-gray-400">
-              Vai aparecer como: <strong id="sigPreviewLabel" class="text-gray-600">Assinado por: gardenia</strong>
+              Vai aparecer como: <strong id="sigPreviewLabel" class="text-gray-600">Assinado por: (Aguardando assinatura)</strong>
             </p>
           </div>
           <div>
@@ -562,7 +559,7 @@
       loadSavedEmailConfig();
 
       if (demandBlocks.length === 0) {
-        loadSampleEspiralData();
+        addDemandBlock();
       }
     });
 
@@ -727,8 +724,7 @@
         toDataURL: () => canvas.toDataURL("image/png")
       };
 
-      // Desenhar assinatura padrão cursiva "gardenia" se estiver em branco
-      drawSampleGardeniaSignature(ctx);
+      // Canvas limpo por padrão (o botão Dados de Exemplo carrega exemplo se necessário)
     }
 
     function drawSampleGardeniaSignature(ctx) {
