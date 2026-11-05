@@ -1,0 +1,1884 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reporta.AI - Gerador de Relatórios Técnicos de Campo</title>
+  
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985',
+              800: '#0c4a6e',
+              900: '#082f49',
+            },
+            corporate: {
+              header: '#0f172a',
+              sub: '#1e293b',
+              accent: '#f59e0b',
+              light: '#f8fafc',
+              border: '#cbd5e1'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- jsPDF & html2canvas via CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+  <style>
+    /* Estilos específicos para o layout A4 Paisagem (297mm x 210mm) */
+    .a4-landscape-page {
+      width: 297mm;
+      height: 210mm;
+      min-width: 297mm;
+      min-height: 210mm;
+      max-width: 297mm;
+      max-height: 210mm;
+      padding: 12mm 15mm;
+      background: #ffffff;
+      box-sizing: border-box;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      color: #0f172a;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    /* Utilitários visuais para visualização de documentos técnicos */
+    .technical-grid {
+      background-size: 20px 20px;
+      background-image: linear-gradient(to right, rgba(226, 232, 240, 0.4) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(226, 232, 240, 0.4) 1px, transparent 1px);
+    }
+
+    /* Scrollbar estilizada */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #94a3b8;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #64748b;
+    }
+
+    /* Ocultar elementos fora da renderização mantendo no DOM para o html2canvas */
+    #pdf-hidden-renderer {
+      position: fixed;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      pointer-events: none;
+      z-index: -9999;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans antialiased">
+
+  <!-- ================= TOPBAR ================= -->
+  <header class="bg-corporate-header text-white border-b border-slate-700 sticky top-0 z-40 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Logo & Nome do App -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-amber-500/20">
+          ⚡
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-bold tracking-tight text-lg text-white">Reporta<span class="text-amber-400">.AI</span></span>
+            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-slate-800 text-amber-300 border border-slate-700">Engenharia</span>
+          </div>
+          <p class="text-xs text-slate-400 hidden sm:block">Gerador de Relatórios Técnicos de Campo • Padrão A4 Paisagem</p>
+        </div>
+      </div>
+
+      <!-- Barra de Ações Rápidas -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Botão Carregar Exemplo -->
+        <button type="button" onclick="loadSampleData()" title="Preencher com dados de exemplo da Espiral Engenharia" class="px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition flex items-center gap-1.5">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
+          <span class="hidden md:inline">Dados de Teste</span>
+        </button>
+
+        <!-- Botão Limpar Formulário -->
+        <button type="button" onclick="confirmReset()" title="Limpar dados da O.S." class="p-1.5 sm:px-3 sm:py-1.5 text-xs font-medium text-slate-400 hover:text-rose-400 bg-slate-800/80 hover:bg-slate-800 border border-slate-700 rounded-lg transition flex items-center gap-1.5">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+          <span class="hidden md:inline">Limpar</span>
+        </button>
+
+        <div class="h-6 w-px bg-slate-700 hidden sm:block"></div>
+
+        <!-- Botão Pré-visualizar -->
+        <button type="button" onclick="previewPDF()" class="px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-slate-100 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg shadow-sm transition flex items-center gap-2">
+          <i data-lucide="eye" class="w-4 h-4 text-cyan-400"></i>
+          <span>Visualizar</span>
+        </button>
+
+        <!-- Botão Baixar PDF -->
+        <button type="button" onclick="generateAndDownloadPDF()" id="btn-download" class="px-4 py-1.5 text-xs sm:text-sm font-semibold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 rounded-lg shadow-md shadow-amber-500/20 transition flex items-center gap-2">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Baixar PDF</span>
+          <span class="sm:hidden">PDF</span>
+        </button>
+
+        <!-- Botão Enviar por E-mail -->
+        <button type="button" onclick="openEmailModal()" class="px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-white bg-brand-600 hover:bg-brand-500 rounded-lg shadow-sm transition flex items-center gap-2">
+          <i data-lucide="send" class="w-4 h-4"></i>
+          <span class="hidden lg:inline">Enviar E-mail</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ================= CONTEÚDO PRINCIPAL ================= -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+
+    <!-- Notificação Flutuante / Status Banner -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform transition-all duration-300 translate-y-20 opacity-0 pointer-events-none">
+      <div id="toast-body" class="bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-3">
+        <span id="toast-icon">⚡</span>
+        <span id="toast-msg" class="text-sm font-medium">Ação concluída com sucesso!</span>
+      </div>
+    </div>
+
+    <!-- FORMULÁRIO GERAL -->
+    <form id="reportForm" onsubmit="event.preventDefault();" class="space-y-8">
+
+      <!-- ================= 1. DADOS DA EMPRESA EMISSORA (COM LOGO) ================= -->
+      <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md">
+        <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3 border-b border-slate-700">
+          <div class="flex items-center gap-3">
+            <div class="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400">
+              <i data-lucide="building-2" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h2 class="text-base font-bold tracking-tight">1. Dados da Empresa Emissora (Contratada)</h2>
+              <p class="text-xs text-slate-400">Personalize o logotipo e as informações institucionais salvas no cabeçalho dos relatórios.</p>
+            </div>
+          </div>
+          <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            Salvo no Navegador
+          </span>
+        </div>
+
+        <div class="p-5 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          
+          <!-- Upload da Logo com Preview -->
+          <div class="lg:col-span-4 flex flex-col items-center justify-center p-5 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 hover:bg-slate-100/80 transition relative group">
+            <input type="file" id="companyLogoInput" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="handleLogoUpload(event)">
+            
+            <div id="logoPreviewContainer" class="w-full flex flex-col items-center justify-center min-h-[140px]">
+              <div id="logoPlaceholder" class="flex flex-col items-center text-center">
+                <div class="w-14 h-14 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center mb-2 group-hover:scale-105 transition">
+                  <i data-lucide="image-plus" class="w-6 h-6"></i>
+                </div>
+                <p class="text-xs font-semibold text-slate-700">Clique para carregar o Logotipo</p>
+                <p class="text-[11px] text-slate-400 mt-0.5">PNG, JPG, SVG ou WEBP (até 2MB)</p>
+              </div>
+              <img id="logoPreview" src="" alt="Logo da Empresa" class="hidden max-h-24 max-w-full object-contain mb-2">
+            </div>
+
+            <div id="logoActionButtons" class="hidden flex items-center gap-2 mt-2 z-20">
+              <button type="button" onclick="removeLogo()" class="text-xs text-rose-600 hover:text-rose-700 font-medium px-2 py-1 rounded bg-rose-50 border border-rose-200 hover:bg-rose-100 transition">
+                Remover Logo
+              </button>
+            </div>
+          </div>
+
+          <!-- Campos de Dados da Empresa -->
+          <div class="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Razão Social / Nome Fantasia *</label>
+              <input type="text" id="companyName" placeholder="Ex: Espiral Engenharia Elétrica & Automação Ltda" value="Espiral Engenharia Elétrica Ltda" class="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition" onchange="saveCompanyData()">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">CNPJ *</label>
+              <input type="text" id="companyCnpj" placeholder="00.000.000/0001-00" value="12.345.678/0001-90" class="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition" onchange="saveCompanyData()">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Telefone / WhatsApp</label>
+              <input type="text" id="companyPhone" placeholder="(11) 99999-0000" value="(11) 3456-7890" class="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition" onchange="saveCompanyData()">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">E-mail Operacional</label>
+              <input type="email" id="companyEmail" placeholder="operacoes@espiralengenharia.com.br" value="operacoes@espiralengenharia.com.br" class="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition" onchange="saveCompanyData()">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Registro Profissional (CREA / CFT)</label>
+              <input type="text" id="companyCrea" placeholder="Ex: CREA-SP 5069999999" value="CREA-SP 5061234567" class="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition" onchange="saveCompanyData()">
+            </div>
+
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Endereço Completo da Sede</label>
+              <input type="text" id="companyAddress" placeholder="Av. Paulista, 1000 - Bela Vista, São Paulo - SP" value="Av. Industrial, 450 - Polo Tecnológico, Campinas - SP" class="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition" onchange="saveCompanyData()">
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ================= 2. DADOS DO CLIENTE & ORDEM DE SERVIÇO ================= -->
+      <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md">
+        <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white p-4 sm:p-5 flex items-center justify-between border-b border-slate-700">
+          <div class="flex items-center gap-3">
+            <div class="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400">
+              <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h2 class="text-base font-bold tracking-tight">2. Informações do Cliente e da Ordem de Serviço (O.S.)</h2>
+              <p class="text-xs text-slate-400">Identificação da contratante, local da intervenção e cronômetro de atendimento.</p>
+            </div>
+          </div>
+          <button type="button" onclick="setNowDateTime()" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-amber-300 transition flex items-center gap-1.5">
+            <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">Definir Horário Atual</span>
+          </button>
+        </div>
+
+        <div class="p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          <!-- Número da OS -->
+          <div class="lg:col-span-1">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">N° da O.S. *</label>
+            <div class="flex gap-1.5">
+              <input type="text" id="osNumber" placeholder="OS-2026-089" value="OS-2026-0412" class="w-full text-sm font-semibold text-slate-900 px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition">
+              <button type="button" onclick="generateOSNumber()" title="Gerar número automático" class="p-2.5 rounded-lg border border-slate-300 hover:bg-slate-100 text-slate-600 transition">
+                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tipo de Tarefa -->
+          <div class="lg:col-span-1">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Tipo de Tarefa / Manutenção *</label>
+            <select id="osType" class="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition bg-white">
+              <option value="Manutenção Preventiva Periódica">Manutenção Preventiva Periódica</option>
+              <option value="Manutenção Corretiva Emergencial">Manutenção Corretiva Emergencial</option>
+              <option value="Manutenção Preditiva (Termografia / Laudo)">Manutenção Preditiva (Termografia / Laudo)</option>
+              <option value="Instalação e Comissionamento">Instalação e Comissionamento</option>
+              <option value="Adequação às Normas NR-10 / NBR 5410">Adequação às Normas NR-10 / NBR 5410</option>
+              <option value="Inspeção e Consultoria Técnica">Inspeção e Consultoria Técnica</option>
+            </select>
+          </div>
+
+          <!-- Nome do Cliente -->
+          <div class="sm:col-span-2 lg:col-span-2">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Cliente / Razão Social *</label>
+            <input type="text" id="clientName" placeholder="Ex: Indústria Metalúrgica Alvorada S.A." value="Centro Logístico Bandeirantes S.A." class="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition">
+          </div>
+
+          <!-- CNPJ / CPF Cliente -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">CNPJ / CPF do Cliente</label>
+            <input type="text" id="clientCnpj" placeholder="98.765.432/0001-10" value="98.765.432/0001-10" class="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition">
+          </div>
+
+          <!-- Contato do Cliente -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Responsável / Telefone</label>
+            <input type="text" id="clientPhone" placeholder="Eng. Carlos Mendonça - (11) 98888-7777" value="Eng. Roberto Silva - (19) 98765-4321" class="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition">
+          </div>
+
+          <!-- E-mail do Cliente -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">E-mail do Cliente (para envio)</label>
+            <input type="email" id="clientEmail" placeholder="manutencao@cliente.com.br" value="engenharia@centrologistico.com.br" class="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition">
+          </div>
+
+          <!-- Técnico Responsável -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Técnico / Engenheiro Executor *</label>
+            <input type="text" id="techLeader" placeholder="Ex: Alex Santana - CFT 12345" value="Alexandre Ramos - Técnico Eletrotécnico" class="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition">
+          </div>
+
+          <!-- Data e Hora Check-in -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Check-in (Chegada no Local) *</label>
+            <input type="datetime-local" id="checkinTime" class="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition">
+          </div>
+
+          <!-- Data e Hora Check-out -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Check-out (Saída do Local) *</label>
+            <input type="datetime-local" id="checkoutTime" class="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition">
+          </div>
+
+          <!-- Endereço da Obra / Intervenção -->
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Endereço da Intervenção / Instalação *</label>
+            <input type="text" id="siteAddress" placeholder="Rodovia Dom Pedro I, km 88 - Galpão 4, Atibaia - SP" value="Rodovia Anhanguera, km 92 - Distrito Industrial, Sumaré - SP" class="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition">
+          </div>
+
+          <!-- Orientações e Escopo Geral -->
+          <div class="sm:col-span-2 lg:col-span-4">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Escopo Solicitado / Orientações Iniciais do Serviço</label>
+            <textarea id="scopeDescription" rows="2" placeholder="Descreva brevemente as diretrizes gerais acordadas para a visita..." class="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition">Inspeção termográfica, reaperto de barramentos do QGBT principal, teste funcional de disjuntores caixa moldada e limpeza técnica dos barramentos da subestação abrigada.</textarea>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ================= 3. SEÇÃO DE RELATO DE EXECUÇÃO & FOTOS ("ANTES E DEPOIS") ================= -->
+      <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md">
+        <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3 border-b border-slate-700">
+          <div class="flex items-center gap-3">
+            <div class="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400">
+              <i data-lucide="camera" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h2 class="text-base font-bold tracking-tight">3. Relato de Execução & Evidências Fotográficas ("Antes e Depois")</h2>
+              <p class="text-xs text-slate-400">Adicione blocos dinâmicos por subsistema ou demanda técnica com fotos etiquetadas.</p>
+            </div>
+          </div>
+
+          <!-- Botão Adicionar Demanda -->
+          <button type="button" onclick="addDemandBlock()" class="px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm transition flex items-center gap-1.5">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+            <span>Nova Demanda / Atividade</span>
+          </button>
+        </div>
+
+        <div class="p-5 sm:p-6 space-y-6">
+          <!-- Container de Blocos Dinâmicos de Demandas -->
+          <div id="demandBlocksContainer" class="space-y-6">
+            <!-- Inserido dinamicamente via JavaScript -->
+          </div>
+
+          <!-- Botão Rodapé Adicionar -->
+          <div class="flex justify-center pt-2">
+            <button type="button" onclick="addDemandBlock()" class="px-5 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-dashed border-slate-300 rounded-xl transition flex items-center gap-2">
+              <i data-lucide="plus" class="w-4 h-4 text-amber-600"></i>
+              Adicionar Outro Bloco de Demanda
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 4. MATERIAIS UTILIZADOS & CONCLUSÃO TÉCNICA ================= -->
+      <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md">
+        <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white p-4 sm:p-5 flex items-center gap-3 border-b border-slate-700">
+          <div class="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400">
+            <i data-lucide="check-square" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h2 class="text-base font-bold tracking-tight">4. Conclusão, Recomendações e Assinatura Digital</h2>
+            <p class="text-xs text-slate-400">Parecer final do especialista, peças aplicadas e termo de aceite assinado em campo.</p>
+          </div>
+        </div>
+
+        <div class="p-5 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          <!-- Materiais e Peças Utilizadas -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Peças, Componentes e Materiais Aplicados (Opcional)</label>
+            <textarea id="materialsUsed" rows="3" placeholder="Ex: 01 un Disjuntor 3x63A curva C Schneider; 03 un Terminais de compressão 50mm²; 01 tubo Spray limpa contato elétrico..." class="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition">01 lata de desengraxante dielétrico; 06 terminais tubulares ilhós 35mm²; 01 rolo de fita autofusão 3M 19mm x 10m; 01 Disjuntor bipolar 16A curva C.</textarea>
+          </div>
+
+          <!-- Parecer Técnico Geral e Recomendações Futuras -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Parecer Geral / Recomendações Técnicas *</label>
+            <textarea id="generalConclusions" rows="3" placeholder="Conclusão sobre o estado final dos equipamentos, prazos sugeridos para nova revisão e orientações de segurança..." class="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition">O sistema foi entregue energizado e em perfeito funcionamento operacional, com níveis térmicos e aperto mecânico dentro dos parâmetros normativos NBR 5410. Recomenda-se nova inspeção termográfica preventiva em 180 dias.</textarea>
+          </div>
+
+          <!-- Assinatura Digital do Técnico -->
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                <i data-lucide="pen-tool" class="w-3.5 h-3.5 text-amber-600"></i> Assinatura do Técnico Responsável
+              </span>
+              <button type="button" onclick="clearSignature('tech')" class="text-[11px] text-rose-600 hover:text-rose-700 font-medium">Limpar</button>
+            </div>
+            <div class="border border-slate-300 rounded-lg bg-white overflow-hidden shadow-inner">
+              <canvas id="techSigCanvas" width="400" height="120" class="w-full h-28 cursor-crosshair touch-none"></canvas>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1">Assine com o dedo no celular/tablet ou mouse no computador.</p>
+          </div>
+
+          <!-- Assinatura Digital do Cliente -->
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                <i data-lucide="user-check" class="w-3.5 h-3.5 text-brand-600"></i> Aceite / Assinatura do Cliente no Local
+              </span>
+              <button type="button" onclick="clearSignature('client')" class="text-[11px] text-rose-600 hover:text-rose-700 font-medium">Limpar</button>
+            </div>
+            <div class="border border-slate-300 rounded-lg bg-white overflow-hidden shadow-inner">
+              <canvas id="clientSigCanvas" width="400" height="120" class="w-full h-28 cursor-crosshair touch-none"></canvas>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1">Validação do serviço executado pelo fiscal ou cliente no local.</p>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- BARRA FLUTUANTE DE FINALIZAÇÃO NO RODAPÉ -->
+      <div class="sticky bottom-4 z-30 bg-slate-900/95 backdrop-blur-md text-white p-3.5 sm:p-4 rounded-2xl shadow-2xl border border-slate-700 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></div>
+          <div>
+            <p class="text-sm font-bold text-white">Relatório Pronto para Emissão</p>
+            <p class="text-xs text-slate-400 hidden sm:block">Geração de PDF A4 Paisagem corporativo de alta definição.</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-3">
+          <button type="button" onclick="previewPDF()" class="px-4 py-2 text-xs sm:text-sm font-semibold text-slate-200 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl transition flex items-center gap-2">
+            <i data-lucide="eye" class="w-4 h-4 text-cyan-400"></i>
+            <span>Pré-visualizar</span>
+          </button>
+          <button type="button" onclick="generateAndDownloadPDF()" class="px-5 py-2 text-xs sm:text-sm font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 rounded-xl shadow-lg shadow-amber-500/25 transition flex items-center gap-2">
+            <i data-lucide="file-down" class="w-4 h-4"></i>
+            <span>Gerar & Baixar PDF</span>
+          </button>
+          <button type="button" onclick="openEmailModal()" class="px-4 py-2 text-xs sm:text-sm font-semibold text-white bg-brand-600 hover:bg-brand-500 rounded-xl shadow-lg shadow-brand-600/25 transition flex items-center gap-2">
+            <i data-lucide="mail" class="w-4 h-4"></i>
+            <span>Enviar E-mail</span>
+          </button>
+        </div>
+      </div>
+
+    </form>
+  </main>
+
+  <!-- ================= MODAL DE PRÉ-VISUALIZAÇÃO A4 PAISAGEM ================= -->
+  <div id="previewModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex-col">
+    <!-- Topbar do Modal -->
+    <div class="h-14 bg-slate-900 border-b border-slate-700 px-4 flex items-center justify-between text-white shrink-0">
+      <div class="flex items-center gap-3">
+        <span class="text-amber-400 font-bold text-sm flex items-center gap-2">
+          <i data-lucide="file-text" class="w-4 h-4"></i> Pré-visualização do Relatório (Modo Paisagem A4)
+        </span>
+        <span id="previewPageCounter" class="text-xs bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full border border-slate-700">Calculando páginas...</span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button type="button" onclick="generateAndDownloadPDF()" class="px-3 py-1.5 text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg transition flex items-center gap-1.5">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i> Baixar PDF
+        </button>
+        <button type="button" onclick="closePreviewModal()" class="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Área de Visualização com Scroll -->
+    <div class="flex-1 overflow-auto p-4 sm:p-8 flex flex-col items-center gap-8 bg-slate-900/60 technical-grid">
+      <div id="previewContainer" class="flex flex-col items-center gap-8 w-full max-w-5xl">
+        <!-- As páginas A4 renderizadas serão injetadas aqui -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL DE ENVIO DE E-MAIL SERVERLESS ================= -->
+  <div id="emailModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Topo Modal -->
+      <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-lg bg-brand-500/20 text-brand-400">
+            <i data-lucide="send" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold">Enviar Relatório por E-mail</h3>
+            <p class="text-xs text-slate-400">Estratégia Serverless gratuita (EmailJS / Resend)</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeEmailModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Conteúdo Modal -->
+      <div class="p-5 sm:p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">E-mail de Destino (Cliente) *</label>
+          <input type="email" id="modalDestEmail" class="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Cópia Oculta / Arquivo da Empresa (Bancada/Backup)</label>
+          <input type="email" id="modalCcEmail" placeholder="relatorios@suaempresa.com.br" class="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 outline-none">
+          <p class="text-[11px] text-slate-500 mt-1">Armazene uma cópia diretamente na caixa de entrada da sua empresa para consulta histórica 100% gratuita.</p>
+        </div>
+
+        <!-- Opções de Envio -->
+        <div class="border-t border-slate-200 pt-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-600">Configuração Serverless (EmailJS)</span>
+            <button type="button" onclick="toggleEmailConfig()" class="text-xs text-brand-600 hover:underline">Configurar Chaves</button>
+          </div>
+
+          <div id="emailConfigBox" class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5 mb-3 hidden">
+            <div>
+              <label class="block text-[11px] font-medium text-slate-600">Service ID (EmailJS)</label>
+              <input type="text" id="emailjsServiceId" placeholder="ex: service_xyz123" class="w-full text-xs px-2.5 py-1.5 rounded border border-slate-300">
+            </div>
+            <div>
+              <label class="block text-[11px] font-medium text-slate-600">Template ID (EmailJS)</label>
+              <input type="text" id="emailjsTemplateId" placeholder="ex: template_abc456" class="w-full text-xs px-2.5 py-1.5 rounded border border-slate-300">
+            </div>
+            <div>
+              <label class="block text-[11px] font-medium text-slate-600">Public Key (EmailJS)</label>
+              <input type="text" id="emailjsPublicKey" placeholder="ex: v6eAbcDefGhi123" class="w-full text-xs px-2.5 py-1.5 rounded border border-slate-300">
+            </div>
+            <button type="button" onclick="saveEmailConfig()" class="text-xs w-full py-1.5 bg-slate-800 text-white font-medium rounded hover:bg-slate-700 transition">Salvar Chaves no Navegador</button>
+          </div>
+
+          <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs flex gap-2.5">
+            <i data-lucide="info" class="w-5 h-5 text-amber-600 shrink-0 mt-0.5"></i>
+            <div>
+              <strong class="font-semibold">Opção Rápida de Envio Direto:</strong>
+              <p class="text-[11px] text-amber-800 mt-0.5">Se ainda não configurou as chaves do EmailJS, você pode abrir o e-mail padrão do seu dispositivo com o resumo executivo pré-preenchido e anexar o PDF gerado em 1 clique.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rodapé Modal -->
+      <div class="bg-slate-50 p-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2.5">
+        <button type="button" onclick="closeEmailModal()" class="px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800">Cancelar</button>
+        
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" onclick="sendViaMailtoClient()" title="Abre seu cliente de e-mail local" class="px-3 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-100 rounded-lg transition flex items-center gap-1.5">
+            <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Mailto
+          </button>
+          
+          <button type="button" onclick="sendViaEmailJS()" id="btn-send-emailjs" title="Envia usando a API gratuita do EmailJS" class="px-3 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-500 rounded-lg shadow-sm transition flex items-center gap-1.5">
+            <i data-lucide="send" class="w-3.5 h-3.5"></i> EmailJS
+          </button>
+
+          <button type="button" onclick="sendViaVercelServerless()" id="btn-send-serverless" title="Gera o PDF e envia como anexo real via rota Serverless da Vercel" class="px-3.5 py-2 text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 rounded-lg shadow-sm transition flex items-center gap-1.5">
+            <i data-lucide="paperclip" class="w-3.5 h-3.5"></i> Serverless + Anexo PDF
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= ELEMENTO OCULTO PARA CONSTRUÇÃO DAS PÁGINAS A4 ================= -->
+  <div id="pdf-hidden-renderer"></div>
+
+  <!-- ================= JAVASCRIPT PRINCIPAL ================= -->
+  <script>
+    // Inicializar ícones Lucide
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      initSignatures();
+      loadSavedCompanyData();
+      loadSavedEmailConfig();
+      
+      // Se não houver blocos de demanda, adiciona o primeiro bloco
+      if (demandBlocks.length === 0) {
+        addDemandBlock();
+      }
+    });
+
+    // Estado da Aplicação
+    let companyLogoBase64 = "";
+    let demandBlocks = [];
+    let nextDemandId = 1;
+
+    // Toast de notificação
+    function showToast(message, icon = "⚡", isError = false) {
+      const toast = document.getElementById("toast");
+      const toastMsg = document.getElementById("toast-msg");
+      const toastIcon = document.getElementById("toast-icon");
+      const toastBody = document.getElementById("toast-body");
+
+      toastMsg.innerText = message;
+      toastIcon.innerText = icon;
+      
+      if (isError) {
+        toastBody.className = "bg-rose-900 text-white px-5 py-3 rounded-xl shadow-2xl border border-rose-700 flex items-center gap-3";
+      } else {
+        toastBody.className = "bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-3";
+      }
+
+      toast.classList.remove("translate-y-20", "opacity-0", "pointer-events-none");
+      setTimeout(() => {
+        toast.classList.add("translate-y-20", "opacity-0", "pointer-events-none");
+      }, 3500);
+    }
+
+    // ================= GERENCIAMENTO DE LOGOTIPO & EMPRESA =================
+    function handleLogoUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith("image/")) {
+        showToast("Por favor selecione um arquivo de imagem válido.", "⚠️", true);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        // Redimensionar e comprimir imagem da logo para otimizar PDF
+        compressImage(e.target.result, 800, 400, 0.9, (compressed) => {
+          companyLogoBase64 = compressed;
+          renderLogoPreview(compressed);
+          saveCompanyData();
+          showToast("Logotipo carregado e salvo com sucesso!", "✅");
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function renderLogoPreview(src) {
+      const preview = document.getElementById("logoPreview");
+      const placeholder = document.getElementById("logoPlaceholder");
+      const actionBtns = document.getElementById("logoActionButtons");
+
+      if (src) {
+        preview.src = src;
+        preview.classList.remove("hidden");
+        placeholder.classList.add("hidden");
+        actionBtns.classList.remove("hidden");
+      } else {
+        preview.src = "";
+        preview.classList.add("hidden");
+        placeholder.classList.remove("hidden");
+        actionBtns.classList.add("hidden");
+      }
+    }
+
+    function removeLogo() {
+      companyLogoBase64 = "";
+      document.getElementById("companyLogoInput").value = "";
+      renderLogoPreview("");
+      saveCompanyData();
+      showToast("Logotipo removido.", "ℹ️");
+    }
+
+    function saveCompanyData() {
+      const companyData = {
+        name: document.getElementById("companyName").value,
+        cnpj: document.getElementById("companyCnpj").value,
+        phone: document.getElementById("companyPhone").value,
+        email: document.getElementById("companyEmail").value,
+        crea: document.getElementById("companyCrea").value,
+        address: document.getElementById("companyAddress").value,
+        logo: companyLogoBase64
+      };
+      localStorage.setItem("reporta_company_data", JSON.stringify(companyData));
+    }
+
+    function loadSavedCompanyData() {
+      const saved = localStorage.getItem("reporta_company_data");
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          if (data.name) document.getElementById("companyName").value = data.name;
+          if (data.cnpj) document.getElementById("companyCnpj").value = data.cnpj;
+          if (data.phone) document.getElementById("companyPhone").value = data.phone;
+          if (data.email) document.getElementById("companyEmail").value = data.email;
+          if (data.crea) document.getElementById("companyCrea").value = data.crea;
+          if (data.address) document.getElementById("companyAddress").value = data.address;
+          if (data.logo) {
+            companyLogoBase64 = data.logo;
+            renderLogoPreview(data.logo);
+          }
+        } catch (e) {
+          console.error("Erro ao carregar dados salvos da empresa", e);
+        }
+      }
+    }
+
+    // ================= BLOCOS DINÂMICOS DE DEMANDAS / FOTOS =================
+    function addDemandBlock(initialData = null) {
+      const demandId = nextDemandId++;
+      const block = {
+        id: demandId,
+        title: initialData ? initialData.title : `Demanda 0${demandBlocks.length + 1} - Inspeção Técnica`,
+        status: initialData ? initialData.status : "Concluído",
+        description: initialData ? initialData.description : "",
+        observations: initialData ? initialData.observations : "",
+        photos: initialData ? initialData.photos : []
+      };
+
+      demandBlocks.push(block);
+      renderDemandBlocks();
+      showToast(`Demanda adicionada.`);
+    }
+
+    function removeDemandBlock(id) {
+      if (demandBlocks.length <= 1) {
+        showToast("O relatório precisa de ao menos uma demanda técnica.", "⚠️", true);
+        return;
+      }
+      demandBlocks = demandBlocks.filter(b => b.id !== id);
+      renderDemandBlocks();
+      showToast("Demanda removida.", "🗑️");
+    }
+
+    function renderDemandBlocks() {
+      const container = document.getElementById("demandBlocksContainer");
+      container.innerHTML = "";
+
+      demandBlocks.forEach((block, index) => {
+        const blockEl = document.createElement("div");
+        blockEl.className = "p-5 sm:p-6 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition space-y-4 relative shadow-sm";
+        blockEl.innerHTML = `
+          <!-- Cabeçalho do Bloco -->
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
+            <div class="flex items-center gap-2 flex-1 min-w-[200px]">
+              <span class="w-7 h-7 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs flex items-center justify-center shrink-0">
+                #${index + 1}
+              </span>
+              <input type="text" value="${escapeHtml(block.title)}" onchange="updateDemandField(${block.id}, 'title', this.value)" placeholder="Título da Demanda / Subsistema (ex: Subestação Principal)" class="font-bold text-sm text-slate-800 bg-white px-3 py-1.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 outline-none w-full max-w-md">
+            </div>
+
+            <div class="flex items-center gap-2">
+              <select onchange="updateDemandField(${block.id}, 'status', this.value)" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 outline-none">
+                <option value="Concluído" ${block.status === "Concluído" ? "selected" : ""}>🟢 Concluído</option>
+                <option value="Pendente" ${block.status === "Pendente" ? "selected" : ""}>🟡 Pendente</option>
+                <option value="Atenção / Reparo" ${block.status === "Atenção / Reparo" ? "selected" : ""}>🔴 Atenção / Reparo</option>
+                <option value="Não Aplicável" ${block.status === "Não Aplicável" ? "selected" : ""}>⚪ Não Aplicável</option>
+              </select>
+
+              <button type="button" onclick="removeDemandBlock(${block.id})" title="Excluir Demanda" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Campos de Descrição -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Descrição do Serviço Executado *</label>
+              <textarea rows="3" onchange="updateDemandField(${block.id}, 'description', this.value)" placeholder="Detalhe as atividades realizadas, testes, medições ou trocas efetuadas..." class="w-full text-xs sm:text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-amber-500 outline-none transition">${escapeHtml(block.description)}</textarea>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Parecer Técnico / Observações da Demanda</label>
+              <textarea rows="3" onchange="updateDemandField(${block.id}, 'observations', this.value)" placeholder="Observações de desgaste, anomalias encontradas ou recomendações pontuais..." class="w-full text-xs sm:text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-amber-500 outline-none transition">${escapeHtml(block.observations)}</textarea>
+            </div>
+          </div>
+
+          <!-- Upload e Grade de Fotos -->
+          <div class="space-y-3 pt-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                <i data-lucide="images" class="w-4 h-4 text-amber-600"></i> Fotos de Evidência ("Antes e Depois")
+              </span>
+              <label class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-white cursor-pointer transition flex items-center gap-1.5 shadow-sm">
+                <i data-lucide="upload" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span>Adicionar Fotos</span>
+                <input type="file" multiple accept="image/*" class="hidden" onchange="handleDemandPhotosUpload(${block.id}, event)">
+              </label>
+            </div>
+
+            <!-- Grid de Fotos -->
+            <div id="photos-grid-${block.id}" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              ${renderPhotoThumbnails(block)}
+            </div>
+          </div>
+        `;
+        container.appendChild(blockEl);
+      });
+
+      lucide.createIcons();
+    }
+
+    function renderPhotoThumbnails(block) {
+      if (!block.photos || block.photos.length === 0) {
+        return `
+          <div class="col-span-full py-6 flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-xl text-slate-400 text-xs bg-white/50">
+            <i data-lucide="camera" class="w-6 h-6 mb-1 text-slate-300"></i>
+            Nenhuma foto adicionada nesta demanda ainda.
+          </div>
+        `;
+      }
+
+      return block.photos.map((photo, pIdx) => `
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm flex flex-col group relative">
+          <div class="relative h-28 bg-slate-900 overflow-hidden flex items-center justify-center">
+            <img src="${photo.src}" class="w-full h-full object-cover group-hover:scale-105 transition duration-200" alt="Evidência">
+            <button type="button" onclick="removePhoto(${block.id}, ${pIdx})" class="absolute top-1.5 right-1.5 bg-rose-600 hover:bg-rose-700 text-white p-1 rounded-full shadow-md transition">
+              <i data-lucide="x" class="w-3.5 h-3.5"></i>
+            </button>
+            <span class="absolute bottom-1.5 left-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded shadow ${getBadgeClass(photo.tag)}">
+              ${photo.tag}
+            </span>
+          </div>
+          
+          <div class="p-2 space-y-1.5 bg-slate-50 flex-1 flex flex-col justify-between">
+            <select onchange="updatePhotoTag(${block.id}, ${pIdx}, this.value)" class="text-[11px] font-semibold w-full py-1 px-1.5 rounded border border-slate-300 bg-white">
+              <option value="ANTES" ${photo.tag === "ANTES" ? "selected" : ""}>🔴 ANTES</option>
+              <option value="DURANTE" ${photo.tag === "DURANTE" ? "selected" : ""}>🟡 DURANTE</option>
+              <option value="DEPOIS" ${photo.tag === "DEPOIS" ? "selected" : ""}>🟢 DEPOIS</option>
+              <option value="EVIDÊNCIA" ${photo.tag === "EVIDÊNCIA" ? "selected" : ""}>🔵 EVIDÊNCIA</option>
+            </select>
+            <input type="text" value="${escapeHtml(photo.caption || '')}" onchange="updatePhotoCaption(${block.id}, ${pIdx}, this.value)" placeholder="Legenda da foto..." class="text-[11px] w-full px-2 py-1 rounded border border-slate-300 bg-white outline-none">
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function getBadgeClass(tag) {
+      switch(tag) {
+        case "ANTES": return "bg-rose-500 text-white";
+        case "DEPOIS": return "bg-emerald-600 text-white";
+        case "DURANTE": return "bg-amber-500 text-slate-950";
+        default: return "bg-sky-600 text-white";
+      }
+    }
+
+    function updateDemandField(blockId, field, value) {
+      const block = demandBlocks.find(b => b.id === blockId);
+      if (block) {
+        block[field] = value;
+      }
+    }
+
+    function handleDemandPhotosUpload(blockId, event) {
+      const files = Array.from(event.target.files);
+      if (!files.length) return;
+
+      const block = demandBlocks.find(b => b.id === blockId);
+      if (!block) return;
+
+      let processed = 0;
+      files.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          // Comprimir fotos para evitar congelamento de memória e PDFs gigantes
+          compressImage(e.target.result, 1200, 900, 0.75, (compressed) => {
+            // Se for a primeira foto do bloco, sugere "ANTES", a segunda "DEPOIS"
+            let suggestedTag = "EVIDÊNCIA";
+            if (block.photos.length === 0) suggestedTag = "ANTES";
+            else if (block.photos.length === 1) suggestedTag = "DEPOIS";
+
+            block.photos.push({
+              src: compressed,
+              tag: suggestedTag,
+              caption: file.name.replace(/\.[^/.]+$/, "")
+            });
+
+            processed++;
+            if (processed === files.length) {
+              renderDemandBlocks();
+              showToast(`${files.length} foto(s) adicionada(s) e otimizada(s)!`, "📸");
+            }
+          });
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function removePhoto(blockId, photoIndex) {
+      const block = demandBlocks.find(b => b.id === blockId);
+      if (block) {
+        block.photos.splice(photoIndex, 1);
+        renderDemandBlocks();
+      }
+    }
+
+    function updatePhotoTag(blockId, photoIndex, value) {
+      const block = demandBlocks.find(b => b.id === blockId);
+      if (block && block.photos[photoIndex]) {
+        block.photos[photoIndex].tag = value;
+        renderDemandBlocks();
+      }
+    }
+
+    function updatePhotoCaption(blockId, photoIndex, value) {
+      const block = demandBlocks.find(b => b.id === blockId);
+      if (block && block.photos[photoIndex]) {
+        block.photos[photoIndex].caption = value;
+      }
+    }
+
+    // ================= ASSINATURAS DIGITAIS (TOUCH / MOUSE) =================
+    let techSigPad = null;
+    let clientSigPad = null;
+
+    function initSignatures() {
+      techSigPad = setupSignatureCanvas("techSigCanvas");
+      clientSigPad = setupSignatureCanvas("clientSigCanvas");
+    }
+
+    function setupSignatureCanvas(canvasId) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext("2d");
+      let drawing = false;
+
+      // Suporte a Retina / Alta Densidade
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * 2;
+      canvas.height = rect.height * 2;
+      ctx.scale(2, 2);
+      ctx.lineWidth = 2.2;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.strokeStyle = "#0f172a";
+
+      function getPos(e) {
+        const cRect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+          x: clientX - cRect.left,
+          y: clientY - cRect.top
+        };
+      }
+
+      function startDraw(e) {
+        drawing = true;
+        const pos = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+        e.preventDefault();
+      }
+
+      function draw(e) {
+        if (!drawing) return;
+        const pos = getPos(e);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        e.preventDefault();
+      }
+
+      function stopDraw() {
+        drawing = false;
+      }
+
+      canvas.addEventListener("mousedown", startDraw);
+      canvas.addEventListener("mousemove", draw);
+      window.addEventListener("mouseup", stopDraw);
+
+      canvas.addEventListener("touchstart", startDraw, { passive: false });
+      canvas.addEventListener("touchmove", draw, { passive: false });
+      window.addEventListener("touchend", stopDraw);
+
+      return {
+        canvas,
+        ctx,
+        clear: function() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        },
+        isEmpty: function() {
+          const pixelBuffer = new Uint32Array(ctx.getImageData(0, 0, canvas.width, canvas.height).data.buffer);
+          return !pixelBuffer.some(color => color !== 0);
+        },
+        toDataURL: function() {
+          return canvas.toDataURL("image/png");
+        }
+      };
+    }
+
+    function clearSignature(type) {
+      if (type === 'tech' && techSigPad) techSigPad.clear();
+      if (type === 'client' && clientSigPad) clientSigPad.clear();
+      showToast("Assinatura limpa.", "✍️");
+    }
+
+    // ================= COMPRESSÃO DE IMAGENS CLIENT-SIDE =================
+    function compressImage(base64Src, maxWidth, maxHeight, quality, callback) {
+      const img = new Image();
+      img.onload = function() {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const compressedBase64 = canvas.toDataURL("image/jpeg", quality);
+        callback(compressedBase64);
+      };
+      img.src = base64Src;
+    }
+
+    // ================= UTILITÁRIOS DE DATA E FORMATAÇÃO =================
+    function setNowDateTime() {
+      const now = new Date();
+      const format = (d) => {
+        const pad = (n) => String(n).padStart(2, "0");
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      };
+      document.getElementById("checkinTime").value = format(now);
+      
+      const later = new Date(now.getTime() + 4 * 60 * 60 * 1000); // +4 horas
+      document.getElementById("checkoutTime").value = format(later);
+      showToast("Horários preenchidos automaticamente!", "⏱️");
+    }
+
+    function generateOSNumber() {
+      const year = new Date().getFullYear();
+      const rand = Math.floor(1000 + Math.random() * 9000);
+      document.getElementById("osNumber").value = `OS-${year}-${rand}`;
+      showToast("Novo número de O.S. gerado!");
+    }
+
+    function formatDateTimeDisplay(isoString) {
+      if (!isoString) return "--/--/---- --:--";
+      const d = new Date(isoString);
+      if (isNaN(d.getTime())) return isoString;
+      return d.toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function escapeHtml(text) {
+      if (!text) return "";
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // ================= DADOS DE EXEMPLO (PADRÃO ESPIRAL ENGENHARIA) =================
+    function loadSampleData() {
+      document.getElementById("companyName").value = "Espiral Engenharia Elétrica & Automação";
+      document.getElementById("companyCnpj").value = "12.345.678/0001-90";
+      document.getElementById("companyPhone").value = "(11) 3456-7890 / (11) 98765-4321";
+      document.getElementById("companyEmail").value = "contato@espiralengenharia.com.br";
+      document.getElementById("companyCrea").value = "CREA-SP 5061234567";
+      document.getElementById("companyAddress").value = "Av. das Indústrias, 1500 - Techno Park, Campinas - SP";
+
+      document.getElementById("osNumber").value = "OS-2026-0742";
+      document.getElementById("osType").value = "Manutenção Preventiva Periódica";
+      document.getElementById("clientName").value = "Multilog Centros de Distribuição Ltda";
+      document.getElementById("clientCnpj").value = "04.567.890/0002-33";
+      document.getElementById("clientPhone").value = "Eng. Marcos Pontes - (19) 99123-4567";
+      document.getElementById("clientEmail").value = "infraestrutura@multilog.com.br";
+      document.getElementById("techLeader").value = "Alexandre Ramos - Técnico Líder de Elétrica";
+      document.getElementById("siteAddress").value = "Rodovia dos Bandeirantes, km 72 - Módulo B, Louveira - SP";
+      document.getElementById("scopeDescription").value = "Manutenção preventiva anual da Cabine Primária 13.8 kV, incluindo ensaios de isolamento, reaperto com torquímetro calibrado no QGBT e termografia geral nos quadros de distribuição.";
+      document.getElementById("materialsUsed").value = "01 Galão Desengraxante Dielétrico Eletro-Clean; 12 Parafusos bicromatizados M10 c/ arruelas de pressão; 01 Conjunto de fusíveis HH 40A 15kV; 02 Rolos fita de autofusão 3M.";
+      document.getElementById("generalConclusions").value = "Os sistemas elétricos inspecionados encontram-se em plena conformidade com as normas ABNT NBR 5410 e NBR 14039. Todos os pontos quentes identificados foram corrigidos via torque nos barramentos. Sistema liberado para operação contínua.";
+
+      // Gerar logotipo SVG inline para Espiral Engenharia caso não tenha
+      if (!companyLogoBase64) {
+        generateDefaultEspiralLogo();
+      }
+
+      setNowDateTime();
+
+      // Duas demandas de exemplo ricas
+      demandBlocks = [
+        {
+          id: 101,
+          title: "Demanda 01 - Cabine Primária e Transformador 750kVA",
+          status: "Concluído",
+          description: "Desenergização, aterramento temporário conforme NR-10, aspiração e limpeza com solvente dielétrico das buchas de alta e baixa tensão. Teste de isolamento de enrolamentos (Megômetro 2.5kV) e reaperto das conexões com torquímetro a 45 N.m.",
+          observations: "Nível do óleo isolante adequado, sem vazamentos aparentes. Bucha primária da fase B apresentava acúmulo de poeira condutiva, sanado após higienização técnica.",
+          photos: [
+            {
+              src: createPlaceholderPhotoData("CABINE PRIMÁRIA - ANTES DA HIGIENIZAÇÃO", "#dc2626"),
+              tag: "ANTES",
+              caption: "Acúmulo de pó e poeira condutiva nos isoladores da mufla 15kV"
+            },
+            {
+              src: createPlaceholderPhotoData("TRANSFORMADOR - PROCESSO DE REAPERTO", "#f59e0b"),
+              tag: "DURANTE",
+              caption: "Aplicação de torque de 45 N.m nos barramentos de baixa tensão"
+            },
+            {
+              src: createPlaceholderPhotoData("CABINE PRIMÁRIA - APÓS MANUTENÇÃO", "#16a34a"),
+              tag: "DEPOIS",
+              caption: "Isoladores higienizados e barramentos com pasta antioxidante nova"
+            }
+          ]
+        },
+        {
+          id: 102,
+          title: "Demanda 02 - QGBT Principal e Termografia",
+          status: "Concluído",
+          description: "Varredura termográfica com câmera FLIR em carga plena (corrente medida: 540A). Identificado ponto quente de 78°C no disjuntor de alimentação das câmaras frias. Efetuado desmonte, substituição de parafusos e retorque com pasta condutiva.",
+          observations: "Após o reaperto e reenergização sob carga de 80%, a temperatura estabilizou em 36°C (dentro do limite normal de trabalho < 50°C).",
+          photos: [
+            {
+              src: createPlaceholderPhotoData("TERMOGRAFIA - PONTO QUENTE 78°C", "#b91c1c"),
+              tag: "ANTES",
+              caption: "Ponto de sobreaquecimento crítico identificado no polo central"
+            },
+            {
+              src: createPlaceholderPhotoData("TERMOGRAFIA - APÓS REPARO 36°C", "#15803d"),
+              tag: "DEPOIS",
+              caption: "Temperatura normalizada após retorque e equalização de fases"
+            }
+          ]
+        }
+      ];
+
+      renderDemandBlocks();
+      saveCompanyData();
+      showToast("Dados de exemplo da Espiral Engenharia carregados com sucesso!", "⚡");
+    }
+
+    function createPlaceholderPhotoData(text, bgColor) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 600;
+      canvas.height = 400;
+      const ctx = canvas.getContext("2d");
+      
+      // Fundo estilizado com gradiente
+      const grad = ctx.createLinearGradient(0, 0, 600, 400);
+      grad.addColorStop(0, bgColor);
+      grad.addColorStop(1, "#0f172a");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 600, 400);
+
+      // Moldura técnica
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+      ctx.lineWidth = 10;
+      ctx.strokeRect(15, 15, 570, 370);
+
+      // Linhas de mira técnica
+      ctx.beginPath();
+      ctx.moveTo(300, 160);
+      ctx.lineTo(300, 240);
+      ctx.moveTo(260, 200);
+      ctx.lineTo(340, 200);
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Texto
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 16px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(text, 300, 260);
+
+      ctx.font = "12px monospace";
+      ctx.fillStyle = "rgba(255,255,255,0.7)";
+      ctx.fillText("EVIDÊNCIA TÉCNICA REGISTRADA", 300, 285);
+
+      return canvas.toDataURL("image/jpeg", 0.85);
+    }
+
+    function generateDefaultEspiralLogo() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 380;
+      canvas.height = 90;
+      const ctx = canvas.getContext("2d");
+
+      // Espiral de Engenharia estilizada
+      ctx.fillStyle = "#f59e0b";
+      ctx.beginPath();
+      ctx.arc(45, 45, 30, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#0f172a";
+      ctx.beginPath();
+      ctx.arc(45, 45, 20, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#38bdf8";
+      ctx.beginPath();
+      ctx.arc(45, 45, 10, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Tipografia da Logo
+      ctx.fillStyle = "#0f172a";
+      ctx.font = "bold 24px ui-sans-serif, system-ui, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("ESPIRAL", 90, 42);
+
+      ctx.fillStyle = "#d97706";
+      ctx.font = "bold 24px ui-sans-serif, system-ui, sans-serif";
+      ctx.fillText("ENGENHARIA", 195, 42);
+
+      ctx.fillStyle = "#64748b";
+      ctx.font = "600 11px ui-sans-serif, system-ui, sans-serif";
+      ctx.letterSpacing = "2px";
+      ctx.fillText("SOLUÇÕES EM ENERGIA & AUTOMAÇÃO", 92, 62);
+
+      companyLogoBase64 = canvas.toDataURL("image/png");
+      renderLogoPreview(companyLogoBase64);
+    }
+
+    function confirmReset() {
+      if (confirm("Deseja realmente limpar os dados da Ordem de Serviço atual? Os dados da sua empresa serão mantidos.")) {
+        document.getElementById("osNumber").value = "";
+        document.getElementById("clientName").value = "";
+        document.getElementById("clientCnpj").value = "";
+        document.getElementById("clientPhone").value = "";
+        document.getElementById("clientEmail").value = "";
+        document.getElementById("techLeader").value = "";
+        document.getElementById("siteAddress").value = "";
+        document.getElementById("scopeDescription").value = "";
+        document.getElementById("materialsUsed").value = "";
+        document.getElementById("generalConclusions").value = "";
+        clearSignature("tech");
+        clearSignature("client");
+        demandBlocks = [];
+        addDemandBlock();
+        showToast("Formulário resetado.", "🧹");
+      }
+    }
+
+    // ================= MOTOR DE COMPOSIÇÃO DAS PÁGINAS A4 PAISAGEM =================
+    function buildA4LandscapeReportPages() {
+      // Coleta todos os dados do formulário
+      const company = {
+        name: document.getElementById("companyName").value || "EMPRESA DE ENGENHARIA",
+        cnpj: document.getElementById("companyCnpj").value || "00.000.000/0001-00",
+        phone: document.getElementById("companyPhone").value || "",
+        email: document.getElementById("companyEmail").value || "",
+        crea: document.getElementById("companyCrea").value || "",
+        address: document.getElementById("companyAddress").value || "",
+        logo: companyLogoBase64
+      };
+
+      const os = {
+        number: document.getElementById("osNumber").value || "OS-S/N",
+        type: document.getElementById("osType").value,
+        client: document.getElementById("clientName").value || "Cliente Não Informado",
+        clientCnpj: document.getElementById("clientCnpj").value || "",
+        clientPhone: document.getElementById("clientPhone").value || "",
+        clientEmail: document.getElementById("clientEmail").value || "",
+        techLeader: document.getElementById("techLeader").value || "Técnico Responsável",
+        checkin: document.getElementById("checkinTime").value,
+        checkout: document.getElementById("checkoutTime").value,
+        siteAddress: document.getElementById("siteAddress").value || "",
+        scope: document.getElementById("scopeDescription").value || "",
+        materials: document.getElementById("materialsUsed").value || "",
+        conclusions: document.getElementById("generalConclusions").value || ""
+      };
+
+      const techSigData = techSigPad && !techSigPad.isEmpty() ? techSigPad.toDataURL() : null;
+      const clientSigData = clientSigPad && !clientSigPad.isEmpty() ? clientSigPad.toDataURL() : null;
+
+      const pages = [];
+
+      // ================= PÁGINA 1: CAPA, DADOS DA OS E RESUMO TÉCNICO =================
+      const page1 = document.createElement("div");
+      page1.className = "a4-landscape-page shadow-2xl mb-8 border border-slate-300";
+      page1.innerHTML = `
+        <!-- Cabeçalho Corporativo Padrão Espiral -->
+        <div class="border-2 border-slate-800 rounded-lg overflow-hidden bg-white mb-2">
+          <div class="flex items-center justify-between p-3 border-b-2 border-slate-800 bg-slate-50">
+            <!-- Logo ou Nome -->
+            <div class="w-1/3 flex items-center">
+              ${company.logo 
+                ? `<img src="${company.logo}" class="max-h-14 max-w-[220px] object-contain" alt="Logo">` 
+                : `<div class="font-black text-lg text-slate-900 tracking-tight">${escapeHtml(company.name)}</div>`
+              }
+            </div>
+
+            <!-- Título do Documento -->
+            <div class="w-1/3 text-center border-x-2 border-slate-800 px-2 py-1">
+              <h1 class="text-sm font-black tracking-wider uppercase text-slate-900">RELATÓRIO TÉCNICO DE ATIVIDADES</h1>
+              <p class="text-[11px] font-bold text-amber-600 uppercase tracking-widest mt-0.5">ORDEM DE SERVIÇO EM CAMPO</p>
+            </div>
+
+            <!-- Identificação da O.S. -->
+            <div class="w-1/3 text-right">
+              <div class="text-base font-black text-slate-900">${escapeHtml(os.number)}</div>
+              <div class="text-[10px] text-slate-600 font-semibold">EMISSÃO: ${new Date().toLocaleDateString('pt-BR')}</div>
+            </div>
+          </div>
+
+          <!-- Faixa de Dados da Emissora -->
+          <div class="bg-slate-900 text-white px-3 py-1 text-[10px] flex flex-wrap justify-between items-center font-medium">
+            <span><strong>EMISSOR:</strong> ${escapeHtml(company.name)} | CNPJ: ${escapeHtml(company.cnpj)}</span>
+            <span><strong>REGISTRO:</strong> ${escapeHtml(company.crea || 'N/A')}</span>
+            <span><strong>CONTATO:</strong> ${escapeHtml(company.phone)} | ${escapeHtml(company.email)}</span>
+          </div>
+        </div>
+
+        <!-- Grade Técnica: Cliente & Ordem de Serviço -->
+        <div class="grid grid-cols-12 gap-2 text-[11px] mb-2">
+          
+          <!-- Bloco do Cliente -->
+          <div class="col-span-6 border-2 border-slate-800 rounded-lg p-2.5 bg-white">
+            <div class="font-black uppercase text-[10px] text-amber-700 border-b border-slate-200 pb-1 mb-2 flex items-center justify-between">
+              <span>DADOS DO CLIENTE / CONTRATANTE</span>
+              <span class="text-[9px] text-slate-400">DOC: ${escapeHtml(os.clientCnpj || 'NÃO INFORMADO')}</span>
+            </div>
+            <div class="grid grid-cols-1 gap-1 leading-snug">
+              <div><strong class="text-slate-900">RAZÃO SOCIAL:</strong> ${escapeHtml(os.client)}</div>
+              <div><strong class="text-slate-900">CONTATO RESPONSÁVEL:</strong> ${escapeHtml(os.clientPhone || 'Não informado')}</div>
+              <div><strong class="text-slate-900">E-MAIL:</strong> ${escapeHtml(os.clientEmail || 'Não informado')}</div>
+              <div><strong class="text-slate-900">LOCAL DE ATENDIMENTO:</strong> ${escapeHtml(os.siteAddress)}</div>
+            </div>
+          </div>
+
+          <!-- Bloco da Intervenção -->
+          <div class="col-span-6 border-2 border-slate-800 rounded-lg p-2.5 bg-white">
+            <div class="font-black uppercase text-[10px] text-amber-700 border-b border-slate-200 pb-1 mb-2 flex items-center justify-between">
+              <span>DADOS DA OPERAÇÃO TÉCNICA</span>
+              <span class="text-[9px] font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">${escapeHtml(os.type)}</span>
+            </div>
+            <div class="grid grid-cols-2 gap-1 leading-snug">
+              <div><strong class="text-slate-900">CHECK-IN:</strong> ${formatDateTimeDisplay(os.checkin)}</div>
+              <div><strong class="text-slate-900">CHECK-OUT:</strong> ${formatDateTimeDisplay(os.checkout)}</div>
+              <div class="col-span-2"><strong class="text-slate-900">RESPONSÁVEL TÉCNICO:</strong> ${escapeHtml(os.techLeader)}</div>
+              <div class="col-span-2"><strong class="text-slate-900">TIPO DE INTERVENÇÃO:</strong> ${escapeHtml(os.type)}</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Escopo do Atendimento -->
+        <div class="border-2 border-slate-800 rounded-lg p-2.5 bg-white mb-2 text-[11px]">
+          <div class="font-black uppercase text-[10px] text-slate-800 border-b border-slate-200 pb-1 mb-1.5">
+            ESCOPO E ORIENTAÇÕES DO SERVIÇO
+          </div>
+          <p class="text-slate-700 text-justify leading-relaxed">${escapeHtml(os.scope || 'Conforme diretrizes acordadas para manutenção técnica de campo.')}</p>
+        </div>
+
+        <!-- Tabela Resumo das Atividades Executadas -->
+        <div class="border-2 border-slate-800 rounded-lg overflow-hidden bg-white mb-2 flex-1 flex flex-col">
+          <div class="bg-slate-800 text-white font-black uppercase text-[10px] px-3 py-1 flex items-center justify-between">
+            <span>RESUMO DAS DEMANDAS TÉCNICAS EXECUTADAS</span>
+            <span>TOTAL: ${demandBlocks.length} ITEM(NS)</span>
+          </div>
+          <div class="overflow-hidden flex-1">
+            <table class="w-full text-left text-[11px] border-collapse">
+              <thead>
+                <tr class="bg-slate-100 text-slate-800 border-b border-slate-300 font-bold text-[10px]">
+                  <th class="p-1.5 w-12 text-center border-r border-slate-300">ITEM</th>
+                  <th class="p-1.5 border-r border-slate-300">DEMANDA / SUBSISTEMA</th>
+                  <th class="p-1.5 border-r border-slate-300">STATUS</th>
+                  <th class="p-1.5 w-24 text-center">EVIDÊNCIAS</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200">
+                ${demandBlocks.map((d, idx) => `
+                  <tr class="hover:bg-slate-50">
+                    <td class="p-1.5 text-center font-bold text-slate-700 border-r border-slate-200">#${idx + 1}</td>
+                    <td class="p-1.5 font-bold text-slate-900 border-r border-slate-200">${escapeHtml(d.title)}</td>
+                    <td class="p-1.5 border-r border-slate-200">
+                      <span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${d.status === 'Concluído' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                        ${d.status}
+                      </span>
+                    </td>
+                    <td class="p-1.5 text-center text-[10px] font-semibold text-slate-600">${d.photos ? d.photos.length : 0} foto(s)</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Rodapé Corporativo da Página 1 -->
+        <div class="border-t-2 border-slate-800 pt-1 text-[9px] text-slate-500 flex justify-between items-center">
+          <span>Relatório gerado por Reporta.AI • Espiral Engenharia Elétrica</span>
+          <span class="font-bold text-slate-700">Página 1</span>
+        </div>
+      `;
+      pages.push(page1);
+
+      // ================= PÁGINAS 2..N: RELATÓRIO FOTOGRÁFICO DE DEMANDAS ("ANTES E DEPOIS") =================
+      // Agrupamos até 4 fotos por página ou 1 demanda detalhada por página para diagramação perfeita
+      demandBlocks.forEach((demand, dIdx) => {
+        const photos = demand.photos || [];
+        
+        // Se a demanda tem mais de 4 fotos, divide em múltiplas páginas
+        const photosPerPage = 4;
+        const totalSubPages = Math.max(1, Math.ceil(photos.length / photosPerPage));
+
+        for (let subPage = 0; subPage < totalSubPages; subPage++) {
+          const pagePhotos = photos.slice(subPage * photosPerPage, (subPage + 1) * photosPerPage);
+          
+          const demandPage = document.createElement("div");
+          demandPage.className = "a4-landscape-page shadow-2xl mb-8 border border-slate-300";
+          demandPage.innerHTML = `
+            <!-- Mini-Cabeçalho Repetível -->
+            <div class="flex items-center justify-between border-b-2 border-slate-800 pb-2 mb-2 text-[10px]">
+              <div class="flex items-center gap-2">
+                ${company.logo 
+                  ? `<img src="${company.logo}" class="max-h-7 max-w-[120px] object-contain" alt="Logo">` 
+                  : `<span class="font-bold text-slate-900">${escapeHtml(company.name)}</span>`
+                }
+                <span class="text-slate-400">|</span>
+                <span class="font-bold text-slate-700">RELATÓRIO TÉCNICO FOTOGRÁFICO</span>
+              </div>
+              <div class="font-bold text-slate-900">
+                O.S. ${escapeHtml(os.number)} • CLIENTE: ${escapeHtml(os.client)}
+              </div>
+            </div>
+
+            <!-- Cabeçalho da Demanda Específica -->
+            <div class="border-2 border-slate-800 rounded-lg p-2.5 bg-slate-50 mb-2">
+              <div class="flex items-center justify-between border-b border-slate-300 pb-1 mb-1.5">
+                <span class="font-black text-xs text-slate-900 uppercase">
+                  ITEM ${dIdx + 1}: ${escapeHtml(demand.title)} ${totalSubPages > 1 ? `(Parte ${subPage + 1}/${totalSubPages})` : ''}
+                </span>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded ${demand.status === 'Concluído' ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-slate-950'}">
+                  ${demand.status}
+                </span>
+              </div>
+              <p class="text-[11px] text-slate-700 leading-snug mb-1"><strong>Descrição do Serviço:</strong> ${escapeHtml(demand.description || 'Execução técnica em conformidade com o procedimento operacional.')}</p>
+              ${demand.observations ? `<p class="text-[11px] text-slate-600 leading-snug"><strong>Parecer Técnico:</strong> ${escapeHtml(demand.observations)}</p>` : ''}
+            </div>
+
+            <!-- Grade de Fotos com Etiquetas (Antes / Depois) -->
+            <div class="flex-1 border-2 border-slate-800 rounded-lg p-2.5 bg-white mb-2 overflow-hidden flex flex-col justify-center">
+              ${pagePhotos.length > 0 ? `
+                <div class="grid ${pagePhotos.length === 1 ? 'grid-cols-1' : pagePhotos.length === 2 ? 'grid-cols-2' : 'grid-cols-2 grid-rows-2'} gap-2.5 h-full">
+                  ${pagePhotos.map((photo, pIdx) => `
+                    <div class="border border-slate-300 rounded-lg overflow-hidden flex flex-col bg-slate-50 relative">
+                      <div class="flex-1 bg-slate-950 relative overflow-hidden flex items-center justify-center min-h-[140px]">
+                        <img src="${photo.src}" class="w-full h-full object-cover" alt="Foto">
+                        <span class="absolute top-2 left-2 text-[10px] font-black px-2 py-0.5 rounded shadow ${getBadgeClass(photo.tag)}">
+                          ${photo.tag}
+                        </span>
+                      </div>
+                      <div class="p-1.5 bg-slate-100 border-t border-slate-200">
+                        <div class="text-[10px] font-bold text-slate-800 truncate">${escapeHtml(photo.caption || `Registro Fotográfico ${subPage * photosPerPage + pIdx + 1}`)}</div>
+                      </div>
+                    </div>
+                  `).join("")}
+                </div>
+              ` : `
+                <div class="h-full flex flex-col items-center justify-center text-slate-400 text-xs">
+                  <span>Nenhum registro fotográfico anexado a esta demanda.</span>
+                </div>
+              `}
+            </div>
+
+            <!-- Rodapé Corporativo -->
+            <div class="border-t-2 border-slate-800 pt-1 text-[9px] text-slate-500 flex justify-between items-center">
+              <span>Evidência técnica auditável • Espiral Engenharia Elétrica</span>
+              <span class="font-bold text-slate-700">Relatório de Atividades</span>
+            </div>
+          `;
+          pages.push(demandPage);
+        }
+      });
+
+      // ================= PÁGINA FINAL: MATERIAIS, PARECER GERAL E TERMO DE ACEITE / ASSINATURAS =================
+      const finalPage = document.createElement("div");
+      finalPage.className = "a4-landscape-page shadow-2xl mb-8 border border-slate-300";
+      finalPage.innerHTML = `
+        <!-- Cabeçalho Repetível -->
+        <div class="flex items-center justify-between border-b-2 border-slate-800 pb-2 mb-2 text-[10px]">
+          <div class="flex items-center gap-2">
+            ${company.logo 
+              ? `<img src="${company.logo}" class="max-h-7 max-w-[120px] object-contain" alt="Logo">` 
+              : `<span class="font-bold text-slate-900">${escapeHtml(company.name)}</span>`
+            }
+            <span class="text-slate-400">|</span>
+            <span class="font-bold text-slate-700">CONCLUSÃO TÉCNICA & ENCERRAMENTO DA O.S.</span>
+          </div>
+          <div class="font-bold text-slate-900">
+            O.S. ${escapeHtml(os.number)} • CLIENTE: ${escapeHtml(os.client)}
+          </div>
+        </div>
+
+        <!-- Seção de Peças e Materiais Aplicados -->
+        <div class="border-2 border-slate-800 rounded-lg p-3 bg-white mb-2 text-[11px]">
+          <div class="font-black uppercase text-[10px] text-amber-700 border-b border-slate-200 pb-1 mb-2">
+            RELAÇÃO DE PEÇAS, COMPONENTES E MATERIAIS APLICADOS EM CAMPO
+          </div>
+          <p class="text-slate-700 leading-relaxed">${escapeHtml(os.materials || 'Nenhum material adicional aplicado além dos insumos padrão de atendimento.')}</p>
+        </div>
+
+        <!-- Parecer Conclusivo do Especialista -->
+        <div class="border-2 border-slate-800 rounded-lg p-3 bg-white mb-2 text-[11px] flex-1">
+          <div class="font-black uppercase text-[10px] text-slate-800 border-b border-slate-200 pb-1 mb-2">
+            PARECER TÉCNICO CONCLUSIVO E RECOMENDAÇÕES PREVENTIVAS
+          </div>
+          <p class="text-slate-800 text-justify leading-relaxed">${escapeHtml(os.conclusions || 'Os serviços foram concluídos atendendo integralmente as boas práticas de engenharia.')}</p>
+          
+          <div class="mt-3 p-2 bg-slate-50 border border-slate-200 rounded text-[10px] text-slate-600">
+            <strong>DECLARAÇÃO DE CONFORMIDADE:</strong> Declaramos que os trabalhos descritos neste relatório foram realizados segundo as normas regulamentadoras aplicáveis do MTE (NR-10 e NR-35) e normas técnicas ABNT vigentes.
+          </div>
+        </div>
+
+        <!-- Quadro de Assinaturas (Técnico e Cliente) -->
+        <div class="border-2 border-slate-800 rounded-lg p-3 bg-slate-50 mb-2">
+          <div class="font-black uppercase text-[10px] text-slate-800 border-b border-slate-300 pb-1 mb-3 text-center">
+            TERMO DE ENCERRAMENTO E ACEITE DOS SERVIÇOS
+          </div>
+
+          <div class="grid grid-cols-2 gap-8 items-end px-6 py-2">
+            
+            <!-- Assinatura Técnico -->
+            <div class="flex flex-col items-center text-center">
+              <div class="h-16 w-full flex items-center justify-center border-b border-slate-800 mb-1">
+                ${techSigData ? `<img src="${techSigData}" class="max-h-14 max-w-full object-contain" alt="Assinatura Técnico">` : '<span class="text-slate-400 text-[10px] italic">Assinado Eletronicamente</span>'}
+              </div>
+              <div class="text-[11px] font-bold text-slate-900">${escapeHtml(os.techLeader)}</div>
+              <div class="text-[10px] text-slate-600">${escapeHtml(company.crea ? company.crea : company.name)}</div>
+              <div class="text-[9px] text-slate-500 uppercase">Responsável Técnico / Contratada</div>
+            </div>
+
+            <!-- Assinatura Cliente -->
+            <div class="flex flex-col items-center text-center">
+              <div class="h-16 w-full flex items-center justify-center border-b border-slate-800 mb-1">
+                ${clientSigData ? `<img src="${clientSigData}" class="max-h-14 max-w-full object-contain" alt="Assinatura Cliente">` : '<span class="text-slate-400 text-[10px] italic">Validação no Local</span>'}
+              </div>
+              <div class="text-[11px] font-bold text-slate-900">${escapeHtml(os.clientPhone ? os.clientPhone.split('-')[0].trim() : os.client)}</div>
+              <div class="text-[10px] text-slate-600">${escapeHtml(os.client)}</div>
+              <div class="text-[9px] text-slate-500 uppercase">Aceite do Cliente / Fiscal do Contrato</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Rodapé Final -->
+        <div class="border-t-2 border-slate-800 pt-1 text-[9px] text-slate-500 flex justify-between items-center">
+          <span>Relatório emitido via Reporta.AI • Plataforma Serverless de Engenharia</span>
+          <span class="font-bold text-slate-700">Encerramento</span>
+        </div>
+      `;
+      pages.push(finalPage);
+
+      // Atualiza paginação no rodapé de todas as páginas
+      const totalPages = pages.length;
+      pages.forEach((p, idx) => {
+        const footerPageSpan = p.querySelector(".border-t-2 span:last-child");
+        if (footerPageSpan) {
+          footerPageSpan.innerText = `Página ${idx + 1} de ${totalPages}`;
+        }
+      });
+
+      return pages;
+    }
+
+    // ================= PRÉ-VISUALIZAÇÃO MODAL =================
+    function previewPDF() {
+      const modal = document.getElementById("previewModal");
+      const container = document.getElementById("previewContainer");
+      const counter = document.getElementById("previewPageCounter");
+
+      container.innerHTML = "";
+      const pages = buildA4LandscapeReportPages();
+      
+      pages.forEach(p => {
+        container.appendChild(p);
+      });
+
+      counter.innerText = `${pages.length} página(s) A4 Paisagem`;
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      showToast("Pré-visualização gerada com sucesso!", "👁️");
+    }
+
+    function closePreviewModal() {
+      const modal = document.getElementById("previewModal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    // ================= MOTOR CENTRAL DE GERAÇÃO DO PDF (A4 PAISAGEM) =================
+    async function buildPdfDocument() {
+      const pages = buildA4LandscapeReportPages();
+      const { jsPDF } = window.jspdf;
+      
+      // Criar documento PDF no modo Paisagem A4 (Landscape: 297mm x 210mm)
+      const pdf = new jsPDF({
+        orientation: "landscape",
+        unit: "mm",
+        format: "a4",
+        compress: true
+      });
+
+      const renderer = document.getElementById("pdf-hidden-renderer");
+      renderer.innerHTML = "";
+
+      for (let i = 0; i < pages.length; i++) {
+        const pageElement = pages[i];
+        renderer.appendChild(pageElement);
+
+        // Capturar a página com html2canvas em escala 2x para alta fidelidade corporativa
+        const canvas = await html2canvas(pageElement, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: "#ffffff"
+        });
+
+        const imgData = canvas.toDataURL("image/jpeg", 0.92);
+
+        if (i > 0) {
+          pdf.addPage("a4", "landscape");
+        }
+
+        // A4 Landscape: 297mm x 210mm
+        pdf.addImage(imgData, "JPEG", 0, 0, 297, 210);
+
+        renderer.removeChild(pageElement);
+      }
+
+      const osNum = document.getElementById("osNumber").value || "OS-Relatorio";
+      const clientName = (document.getElementById("clientName").value || "Cliente").replace(/[^a-zA-Z0-9]/g, "_");
+      const fileName = `${osNum}_${clientName}_Relatorio_Campo.pdf`;
+
+      return { pdf, fileName };
+    }
+
+    // ================= DOWNLOAD DO PDF =================
+    async function generateAndDownloadPDF() {
+      const btn = document.getElementById("btn-download");
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Gerando...`;
+
+      try {
+        showToast("Gerando páginas do PDF em alta definição...", "⚙️");
+        const { pdf, fileName } = await buildPdfDocument();
+        pdf.save(fileName);
+        showToast("PDF baixado com sucesso!", "🎉");
+      } catch (error) {
+        console.error("Erro na geração do PDF:", error);
+        showToast("Erro ao gerar PDF. Verifique o console.", "❌", true);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        lucide.createIcons();
+      }
+    }
+
+    // ================= ENVIO VIA VERCEL SERVERLESS FUNCTION (COM ANEXO REAL) =================
+    async function sendViaVercelServerless() {
+      const destEmail = document.getElementById("modalDestEmail").value;
+      const ccEmail = document.getElementById("modalCcEmail").value;
+      const osNum = document.getElementById("osNumber").value || "OS-S/N";
+      const client = document.getElementById("clientName").value || "Cliente";
+
+      if (!destEmail) {
+        showToast("Informe o e-mail de destino.", "⚠️", true);
+        return;
+      }
+
+      const btn = document.getElementById("btn-send-serverless");
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Gerando PDF e Enviando...`;
+
+      try {
+        showToast("Compilando PDF e enviando via Vercel Serverless...", "⚙️");
+        const { pdf, fileName } = await buildPdfDocument();
+        const pdfBase64 = pdf.output("datauristring");
+
+        const payload = {
+          to: destEmail,
+          cc: ccEmail || undefined,
+          subject: `Relatório Técnico de Atividades - ${osNum} - ${client}`,
+          filename: fileName,
+          pdfBase64: pdfBase64,
+          html: `
+            <div style="font-family: sans-serif; color: #1e293b; max-width: 600px; line-height: 1.5;">
+              <h2 style="color: #0f172a; border-bottom: 2px solid #f59e0b; padding-bottom: 8px;">Relatório Técnico de Atividades</h2>
+              <p>Prezado(a),</p>
+              <p>Segue em anexo o Relatório Técnico de Atividades em formato A4 Paisagem referente à <strong>${osNum}</strong>.</p>
+              <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px;">
+                <tr style="background: #f8fafc;"><td style="padding: 8px; font-weight: bold; border: 1px solid #e2e8f0;">Cliente:</td><td style="padding: 8px; border: 1px solid #e2e8f0;">${client}</td></tr>
+                <tr><td style="padding: 8px; font-weight: bold; border: 1px solid #e2e8f0;">Responsável Técnico:</td><td style="padding: 8px; border: 1px solid #e2e8f0;">${document.getElementById("techLeader").value}</td></tr>
+                <tr style="background: #f8fafc;"><td style="padding: 8px; font-weight: bold; border: 1px solid #e2e8f0;">Tipo de Tarefa:</td><td style="padding: 8px; border: 1px solid #e2e8f0;">${document.getElementById("osType").value}</td></tr>
+                <tr><td style="padding: 8px; font-weight: bold; border: 1px solid #e2e8f0;">Demandas Executadas:</td><td style="padding: 8px; border: 1px solid #e2e8f0;">${demandBlocks.length} itens com evidências fotográficas</td></tr>
+              </table>
+              <p style="font-size: 12px; color: #64748b;">Este e-mail e o anexo PDF foram gerados e arquivados pela plataforma Reporta.AI.</p>
+            </div>
+          `
+        };
+
+        const res = await fetch("/api/send-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          showToast("Relatório com anexo PDF enviado com sucesso!", "🚀");
+          closeEmailModal();
+        } else {
+          // Se a rota da Vercel retornou erro (ex: falta de chave Resend ou rodando em file://)
+          console.warn("Resposta da API:", data);
+          showToast(data.error?.message || data.error || "Configure a RESEND_API_KEY na Vercel ou use EmailJS.", "⚠️", true);
+        }
+
+      } catch (err) {
+        console.warn("Erro ao chamar /api/send-email:", err);
+        showToast("Função serverless local indisponível. Utilize o EmailJS ou o cliente Mailto.", "ℹ️");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        lucide.createIcons();
+      }
+    }
+
+    // ================= ENVIO SERVERLESS POR E-MAIL =================
+    function openEmailModal() {
+      const clientEmail = document.getElementById("clientEmail").value;
+      const companyEmail = document.getElementById("companyEmail").value;
+      
+      document.getElementById("modalDestEmail").value = clientEmail || "";
+      document.getElementById("modalCcEmail").value = companyEmail || "";
+
+      const modal = document.getElementById("emailModal");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    }
+
+    function closeEmailModal() {
+      const modal = document.getElementById("emailModal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    function toggleEmailConfig() {
+      const box = document.getElementById("emailConfigBox");
+      box.classList.toggle("hidden");
+    }
+
+    function saveEmailConfig() {
+      const config = {
+        serviceId: document.getElementById("emailjsServiceId").value,
+        templateId: document.getElementById("emailjsTemplateId").value,
+        publicKey: document.getElementById("emailjsPublicKey").value
+      };
+      localStorage.setItem("reporta_emailjs_config", JSON.stringify(config));
+      showToast("Configurações do EmailJS salvas!", "🔑");
+      toggleEmailConfig();
+    }
+
+    function loadSavedEmailConfig() {
+      const saved = localStorage.getItem("reporta_emailjs_config");
+      if (saved) {
+        try {
+          const config = JSON.parse(saved);
+          if (config.serviceId) document.getElementById("emailjsServiceId").value = config.serviceId;
+          if (config.templateId) document.getElementById("emailjsTemplateId").value = config.templateId;
+          if (config.publicKey) document.getElementById("emailjsPublicKey").value = config.publicKey;
+        } catch(e) {}
+      }
+    }
+
+    // Envio nativo via mailto: com resumo executivo pré-formatado
+    function sendViaMailtoClient() {
+      const dest = document.getElementById("modalDestEmail").value;
+      const cc = document.getElementById("modalCcEmail").value;
+      const osNum = document.getElementById("osNumber").value || "OS-S/N";
+      const client = document.getElementById("clientName").value || "Cliente";
+      const tech = document.getElementById("techLeader").value || "";
+      const conclusions = document.getElementById("generalConclusions").value || "";
+
+      const subject = encodeURIComponent(`Relatório Técnico de Campo - ${osNum} - ${client}`);
+      const body = encodeURIComponent(
+        `Prezado(a),\n\n` +
+        `Segue o Relatório Técnico de Atividades de Campo referente à ${osNum}.\n\n` +
+        `• Cliente: ${client}\n` +
+        `• Responsável Técnico: ${tech}\n` +
+        `• Total de Demandas Executadas: ${demandBlocks.length}\n` +
+        `• Parecer Geral: ${conclusions}\n\n` +
+        `Por gentileza, baixe o PDF gerado pelo sistema e anexe-o a esta mensagem para arquivamento.\n\n` +
+        `Atenciosamente,\n${document.getElementById("companyName").value}`
+      );
+
+      let mailtoUrl = `mailto:${dest}?subject=${subject}&body=${body}`;
+      if (cc) mailtoUrl += `&cc=${cc}`;
+
+      window.location.href = mailtoUrl;
+      closeEmailModal();
+      showToast("Abrindo cliente de e-mail...", "📧");
+    }
+
+    // Envio automatizado Serverless usando a SDK do EmailJS
+    async function sendViaEmailJS() {
+      const serviceId = document.getElementById("emailjsServiceId").value;
+      const templateId = document.getElementById("emailjsTemplateId").value;
+      const publicKey = document.getElementById("emailjsPublicKey").value;
+      const destEmail = document.getElementById("modalDestEmail").value;
+      const ccEmail = document.getElementById("modalCcEmail").value;
+
+      if (!publicKey || !serviceId || !templateId) {
+        showToast("Configure o Service ID, Template ID e Public Key do EmailJS.", "⚠️", true);
+        toggleEmailConfig();
+        return;
+      }
+
+      if (!destEmail) {
+        showToast("Informe o e-mail de destino.", "⚠️", true);
+        return;
+      }
+
+      const btn = document.getElementById("btn-send-emailjs");
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Enviando...`;
+
+      try {
+        emailjs.init(publicKey);
+
+        const templateParams = {
+          to_email: destEmail,
+          cc_email: ccEmail,
+          company_name: document.getElementById("companyName").value,
+          os_number: document.getElementById("osNumber").value,
+          client_name: document.getElementById("clientName").value,
+          tech_leader: document.getElementById("techLeader").value,
+          task_type: document.getElementById("osType").value,
+          demands_count: demandBlocks.length,
+          conclusions: document.getElementById("generalConclusions").value,
+          report_date: new Date().toLocaleDateString("pt-BR")
+        };
+
+        await emailjs.send(serviceId, templateId, templateParams);
+        showToast("Relatório enviado por e-mail via Serverless com sucesso!", "🚀");
+        closeEmailModal();
+      } catch (err) {
+        console.error("Erro no envio pelo EmailJS:", err);
+        showToast("Falha no envio do e-mail. Verifique suas chaves.", "❌", true);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        lucide.createIcons();
+      }
+    }
+  </script>
+</body>
+</html>
