@@ -3,24 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reporta.AI - Relatório Técnico de Campo (Padrão Espiral Engenharia)</title>
-  
+  <title>Reporta.AI — Relatórios Técnicos de Campo</title>
+
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          },
           colors: {
-            brand: {
-              50: '#f0f7ff',
-              100: '#e0effe',
-              500: '#0284c7',
-              600: '#0369a1',
-              700: '#075985',
-              800: '#0c4a6e',
-              900: '#082f49',
-            },
             espiral: {
               blue: '#005baa',
               orange: '#f58220',
@@ -33,6 +27,9 @@
       }
     }
   </script>
+  <!-- Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -45,7 +42,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
   <style>
-    /* Estilos para A4 Retrato / Portrait (210mm x 297mm) */
+    /* ---- A4 Retrato / Portrait (210mm x 297mm) ---- */
     .a4-portrait-page {
       width: 210mm;
       height: 297mm;
@@ -67,361 +64,393 @@
       line-height: 1.25;
     }
 
-    /* Tabela técnica com linhas e bordas pretas idênticas ao modelo Espiral */
+    /* Tabelas com bordas pretas (padrão Espiral) */
     .table-espiral {
       width: 100%;
       border-collapse: collapse;
-      border: 1px solid #000000;
+      border: 1px solid #000;
     }
-
     .table-espiral th,
     .table-espiral td {
-      border: 1px solid #000000;
+      border: 1px solid #000;
       padding: 3px 5px;
       font-size: 10px;
     }
-
     .header-gray {
       background-color: #9ca3af !important;
-      color: #000000 !important;
+      color: #000 !important;
       font-weight: bold;
       text-align: center;
       padding: 2.5px 4px;
       font-size: 10.5px;
-      border: 1px solid #000000;
+      border: 1px solid #000;
     }
-
     .sub-header {
       background-color: #f3f4f6;
       font-weight: bold;
     }
 
-    /* Container oculto no viewport para renderização de alta fidelidade */
+    /* Renderizador oculto para html2canvas */
     #pdf-hidden-renderer {
       position: fixed;
-      left: 0;
-      top: 0;
+      left: 0; top: 0;
       opacity: 0;
       pointer-events: none;
       z-index: -9999;
     }
 
-    /* Visualização técnica de fundo no preview */
-    .technical-grid {
-      background-size: 20px 20px;
-      background-image: linear-gradient(to right, rgba(226, 232, 240, 0.4) 1px, transparent 1px),
-                        linear-gradient(to bottom, rgba(226, 232, 240, 0.4) 1px, transparent 1px);
+    /* ---- UI: Inputs e Labels Neutros ---- */
+    .field-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      color: #6b7280;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .field-input {
+      width: 100%;
+      font-size: 13px;
+      padding: 7px 10px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      background: #fff;
+      color: #111827;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .field-input:focus {
+      border-color: #9ca3af;
+    }
+    textarea.field-input {
+      resize: vertical;
+    }
+
+    /* ---- UI: Seção Cabeçalho ---- */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-bottom: 1px solid #f3f4f6;
+      background: #fafafa;
+    }
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #374151;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* ---- Preview grid ---- */
+    .preview-bg {
+      background-color: #e5e7eb;
+      background-image: radial-gradient(#d1d5db 1px, transparent 1px);
+      background-size: 24px 24px;
     }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col font-sans antialiased">
+<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col antialiased" style="font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;">
 
-  <!-- ================= TOPBAR ================= -->
-  <header class="bg-slate-900 text-white border-b border-slate-700 sticky top-0 z-40 shadow-md">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      
-      <!-- Logo & Título -->
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-amber-500 flex items-center justify-center text-white font-black text-lg shadow-md">
-          ⚡
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="font-bold tracking-tight text-base sm:text-lg text-white">Reporta<span class="text-amber-400">.AI</span></span>
-            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-slate-800 text-emerald-400 border border-slate-700">Modelo Limpo • Retrato A4</span>
-          </div>
-          <p class="text-xs text-slate-400 hidden sm:block">Padrão Operacional Oficial de Relatórios Técnicos (Espiral Engenharia)</p>
-        </div>
-      </div>
+  <!-- ============================================================
+       TOPBAR — clean, monochrome, sem gradientes
+  ============================================================ -->
+  <header class="h-14 bg-white border-b border-gray-200 sticky top-0 z-40 flex items-center px-5 gap-6">
 
-      <!-- Barra de Ações Rápidas -->
-      <div class="flex items-center gap-2 sm:gap-3">
-        <!-- Botão Dados Oficiais Espiral -->
-        <button type="button" onclick="loadSampleEspiralData()" title="Preencher com os dados reais do relatório Espiral Engenharia" class="px-3 py-1.5 text-xs font-semibold text-slate-200 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition flex items-center gap-1.5 shadow-sm">
-          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
-          <span class="hidden md:inline">Dados Oficiais (Espiral)</span>
-          <span class="md:hidden">Exemplo</span>
-        </button>
-
-        <button type="button" onclick="confirmReset()" title="Limpar dados" class="p-1.5 sm:px-2.5 sm:py-1.5 text-xs text-slate-400 hover:text-rose-400 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition flex items-center gap-1">
-          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
-          <span class="hidden md:inline">Limpar</span>
-        </button>
-
-        <div class="h-6 w-px bg-slate-700 hidden sm:block"></div>
-
-        <!-- Botão Pré-visualizar Retrato -->
-        <button type="button" onclick="previewPDF()" class="px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-white bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg shadow-sm transition flex items-center gap-1.5">
-          <i data-lucide="eye" class="w-4 h-4 text-cyan-400"></i>
-          <span>Visualizar</span>
-        </button>
-
-        <!-- Botão Baixar PDF Retrato -->
-        <button type="button" onclick="generateAndDownloadPDF()" id="btn-download" class="px-4 py-1.5 text-xs sm:text-sm font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-lg shadow-md transition flex items-center gap-1.5">
-          <i data-lucide="download" class="w-4 h-4"></i>
-          <span>Baixar PDF</span>
-        </button>
-
-        <!-- Botão Enviar E-mail -->
-        <button type="button" onclick="openEmailModal()" class="px-3 py-1.5 text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-lg shadow-sm transition flex items-center gap-1.5">
-          <i data-lucide="send" class="w-4 h-4"></i>
-          <span class="hidden lg:inline">E-mail</span>
-        </button>
-      </div>
-
+    <!-- Marca -->
+    <div class="flex items-center gap-2.5 shrink-0">
+      <span class="text-base font-semibold tracking-tight text-gray-900">Reporta<span class="text-gray-400">.AI</span></span>
+      <span class="hidden sm:inline text-[10px] font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded">A4 Retrato</span>
     </div>
+
+    <!-- Separador -->
+    <div class="h-5 w-px bg-gray-200 hidden sm:block"></div>
+
+    <!-- Ações secundárias -->
+    <div class="flex items-center gap-1.5 flex-1">
+      <button type="button" onclick="loadSampleEspiralData()"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">
+        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+        <span class="hidden sm:inline">Dados de Exemplo</span>
+      </button>
+      <button type="button" onclick="confirmReset()"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors">
+        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+        <span class="hidden sm:inline">Limpar</span>
+      </button>
+    </div>
+
+    <!-- Ações primárias -->
+    <div class="flex items-center gap-2 shrink-0">
+      <button type="button" onclick="previewPDF()"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-md transition-colors">
+        <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+        <span>Visualizar</span>
+      </button>
+      <button type="button" onclick="generateAndDownloadPDF()" id="btn-download"
+        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-gray-900 hover:bg-gray-700 rounded-md transition-colors">
+        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+        <span>Baixar PDF</span>
+      </button>
+      <button type="button" onclick="openEmailModal()"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-md transition-colors">
+        <i data-lucide="send" class="w-3.5 h-3.5"></i>
+        <span class="hidden sm:inline">Enviar</span>
+      </button>
+    </div>
+
   </header>
 
-  <!-- ================= CONTEÚDO PRINCIPAL (FORMULÁRIO) ================= -->
-  <main class="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6 space-y-6">
+  <!-- ============================================================
+       CONTEÚDO PRINCIPAL
+  ============================================================ -->
+  <main class="flex-1 max-w-4xl w-full mx-auto px-4 py-8 space-y-5">
 
-    <!-- Toast de Notificações -->
-    <div id="toast" class="fixed bottom-5 right-5 z-50 transform transition-all duration-300 translate-y-20 opacity-0 pointer-events-none">
-      <div id="toast-body" class="bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-3">
-        <span id="toast-icon">⚡</span>
-        <span id="toast-msg" class="text-sm font-medium">Sucesso!</span>
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transition-all duration-200 translate-y-16 opacity-0 pointer-events-none">
+      <div id="toast-body" class="bg-gray-900 text-white text-xs font-medium px-4 py-2.5 rounded-lg shadow-lg flex items-center gap-2">
+        <span id="toast-icon"></span>
+        <span id="toast-msg">Pronto.</span>
       </div>
     </div>
 
-    <form id="reportForm" onsubmit="event.preventDefault();" class="space-y-6">
+    <form id="reportForm" onsubmit="event.preventDefault();" class="space-y-5">
 
-      <!-- ================= 1. CABEÇALHO DA EMPRESA EMISSORA ================= -->
-      <section class="bg-white rounded-xl border border-slate-300 shadow-sm overflow-hidden">
-        <div class="bg-slate-800 text-white px-4 py-3 flex items-center justify-between border-b border-slate-700">
-          <div class="flex items-center gap-2">
-            <i data-lucide="building-2" class="w-4 h-4 text-amber-400"></i>
-            <h2 class="text-sm font-bold uppercase tracking-wider">1. Dados da Empresa Emissora (Cabeçalho do Relatório)</h2>
-          </div>
-          <span class="text-[11px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-medium">Salvo no navegador</span>
+      <!-- =========================================================
+           SEÇÃO 1 — EMPRESA EMISSORA
+      ========================================================= -->
+      <section class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div class="section-header">
+          <span class="section-title">Empresa emissora</span>
+          <span class="text-[11px] text-gray-400">Salvo automaticamente no navegador</span>
         </div>
 
-        <div class="p-4 sm:p-5 grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
-          
-          <!-- Upload da Logo -->
-          <div class="md:col-span-4 flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 rounded-lg bg-slate-50 hover:bg-slate-100 transition relative">
-            <input type="file" id="companyLogoInput" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="handleLogoUpload(event)">
-            <div id="logoPreviewContainer" class="flex flex-col items-center text-center">
-              <div id="logoPlaceholder" class="flex flex-col items-center">
-                <i data-lucide="image-plus" class="w-8 h-8 text-slate-400 mb-1"></i>
-                <p class="text-xs font-semibold text-slate-700">Carregar Logotipo</p>
-                <p class="text-[10px] text-slate-400">PNG, JPG ou WEBP</p>
+        <div class="p-5 grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
+
+          <!-- Upload de Logo -->
+          <div class="md:col-span-3 relative flex flex-col items-center justify-center border border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors min-h-[120px] cursor-pointer">
+            <input type="file" id="companyLogoInput" accept="image/*"
+              class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+              onchange="handleLogoUpload(event)">
+            <div id="logoPreviewContainer" class="flex flex-col items-center text-center px-3 py-4">
+              <div id="logoPlaceholder" class="flex flex-col items-center gap-1">
+                <i data-lucide="image" class="w-7 h-7 text-gray-300"></i>
+                <p class="text-xs text-gray-500 font-medium">Carregar logo</p>
+                <p class="text-[10px] text-gray-400">PNG · JPG · WEBP</p>
               </div>
-              <img id="logoPreview" src="" alt="Logo" class="hidden max-h-20 max-w-full object-contain mb-1">
+              <img id="logoPreview" src="" alt="Logo" class="hidden max-h-16 max-w-full object-contain">
             </div>
-            <div id="logoActionButtons" class="hidden mt-2 z-20">
-              <button type="button" onclick="removeLogo()" class="text-[11px] text-rose-600 hover:underline">Remover Logo</button>
+            <div id="logoActionButtons" class="hidden pb-2 z-20">
+              <button type="button" onclick="removeLogo()" class="text-[11px] text-red-500 hover:text-red-700">Remover</button>
             </div>
           </div>
 
-          <!-- Campos da Empresa -->
-          <div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <!-- Campos -->
+          <div class="md:col-span-9 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div class="sm:col-span-2">
-              <label class="block font-bold text-slate-700 mb-1">Razão Social / Nome da Empresa *</label>
-              <input type="text" id="companyName" value="ESPIRAL ENGENHARIA ELETRICA" class="w-full px-3 py-2 rounded border border-slate-300 focus:ring-1 focus:ring-blue-500 outline-none" onchange="saveCompanyData()">
+              <label class="field-label">Razão Social *</label>
+              <input type="text" id="companyName" value="ESPIRAL ENGENHARIA ELETRICA"
+                class="field-input" onchange="saveCompanyData()">
             </div>
             <div>
-              <label class="block font-bold text-slate-700 mb-1">CNPJ *</label>
-              <input type="text" id="companyCnpj" value="52.960.528/0001-06" class="w-full px-3 py-2 rounded border border-slate-300 focus:ring-1 focus:ring-blue-500 outline-none" onchange="saveCompanyData()">
+              <label class="field-label">CNPJ *</label>
+              <input type="text" id="companyCnpj" value="52.960.528/0001-06"
+                class="field-input" onchange="saveCompanyData()">
             </div>
             <div>
-              <label class="block font-bold text-slate-700 mb-1">Telefone *</label>
-              <input type="text" id="companyPhone" value="85 9 8778-5560" class="w-full px-3 py-2 rounded border border-slate-300 focus:ring-1 focus:ring-blue-500 outline-none" onchange="saveCompanyData()">
+              <label class="field-label">Telefone</label>
+              <input type="text" id="companyPhone" value="85 9 8778-5560"
+                class="field-input" onchange="saveCompanyData()">
             </div>
             <div>
-              <label class="block font-bold text-slate-700 mb-1">E-mail Operacional *</label>
-              <input type="email" id="companyEmail" value="adm.financeiro@espiraleletrica.com" class="w-full px-3 py-2 rounded border border-slate-300 focus:ring-1 focus:ring-blue-500 outline-none" onchange="saveCompanyData()">
+              <label class="field-label">E-mail</label>
+              <input type="email" id="companyEmail" value="adm.financeiro@espiraleletrica.com"
+                class="field-input" onchange="saveCompanyData()">
             </div>
             <div>
-              <label class="block font-bold text-slate-700 mb-1">Título do Documento</label>
-              <input type="text" id="documentTitle" value="Relatório de tarefas" class="w-full px-3 py-2 rounded border border-slate-300 focus:ring-1 focus:ring-blue-500 outline-none" onchange="saveCompanyData()">
+              <label class="field-label">Título do documento</label>
+              <input type="text" id="documentTitle" value="Relatório de tarefas"
+                class="field-input" onchange="saveCompanyData()">
             </div>
             <div class="sm:col-span-2">
-              <label class="block font-bold text-slate-700 mb-1">Endereço Completo da Sede *</label>
-              <input type="text" id="companyAddress" value="AV GODOFREDO MACIEL N° 2238 - MARAPONGA - FORTALEZA/CE" class="w-full px-3 py-2 rounded border border-slate-300 focus:ring-1 focus:ring-blue-500 outline-none" onchange="saveCompanyData()">
+              <label class="field-label">Endereço da Sede</label>
+              <input type="text" id="companyAddress"
+                value="AV GODOFREDO MACIEL N° 2238 - MARAPONGA - FORTALEZA/CE"
+                class="field-input" onchange="saveCompanyData()">
             </div>
           </div>
 
         </div>
       </section>
 
-      <!-- ================= 2. INFORMAÇÕES DO CLIENTE E DA ATIVIDADE ================= -->
-      <section class="bg-white rounded-xl border border-slate-300 shadow-sm overflow-hidden">
-        <div class="bg-slate-800 text-white px-4 py-3 flex items-center justify-between border-b border-slate-700">
-          <div class="flex items-center gap-2">
-            <i data-lucide="clipboard-list" class="w-4 h-4 text-amber-400"></i>
-            <h2 class="text-sm font-bold uppercase tracking-wider">2. Informações do Cliente e da Atividade (Tabela Oficial)</h2>
-          </div>
-          <button type="button" onclick="setNowDateTime()" class="text-xs text-amber-300 hover:text-white flex items-center gap-1">
-            <i data-lucide="clock" class="w-3.5 h-3.5"></i> Horário Atual
+      <!-- =========================================================
+           SEÇÃO 2 — CLIENTE & ORDEM DE SERVIÇO
+      ========================================================= -->
+      <section class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div class="section-header">
+          <span class="section-title">Cliente & Ordem de Serviço</span>
+          <button type="button" onclick="setNowDateTime()"
+            class="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-800 transition-colors">
+            <i data-lucide="clock" class="w-3.5 h-3.5"></i> Horário agora
           </button>
         </div>
 
-        <div class="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 text-xs">
-          
-          <!-- Identificador do Topo da Tabela (ex: CONDOMINIO LANDSCAPE) -->
+        <div class="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+
           <div class="sm:col-span-2">
-            <label class="block font-bold text-slate-700 mb-1">Identificador do Topo / Empreendimento (ex: LANDSCAPE) *</label>
-            <input type="text" id="headerUnitName" value="LANDSCAPE" placeholder="Ex: CONDOMINIO LANDSCAPE" class="w-full font-bold text-slate-900 px-3 py-2 rounded border border-slate-300 focus:ring-1 focus:ring-blue-500 outline-none">
+            <label class="field-label">Empreendimento / Identificador *</label>
+            <input type="text" id="headerUnitName" value="LANDSCAPE" placeholder="Ex: LANDSCAPE" class="field-input font-semibold">
           </div>
-
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Nº O.S *</label>
-            <input type="text" id="osNumber" value="75531396" class="w-full font-bold text-slate-900 px-3 py-2 rounded border border-slate-300 focus:ring-1 focus:ring-blue-500 outline-none">
+            <label class="field-label">Nº O.S. *</label>
+            <input type="text" id="osNumber" value="75531396" class="field-input font-semibold">
           </div>
-
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Código Externo</label>
-            <input type="text" id="externalCode" value="" placeholder="Opcional" class="w-full px-3 py-2 rounded border border-slate-300 focus:ring-1 focus:ring-blue-500 outline-none">
-          </div>
-
-          <!-- Informações do Cliente -->
-          <div class="sm:col-span-2">
-            <label class="block font-bold text-slate-700 mb-1">Falar com (Cliente) *</label>
-            <input type="text" id="clientName" value="CONDOMINIO LANDSCAPE" class="w-full px-3 py-2 rounded border border-slate-300 focus:ring-1 focus:ring-blue-500 outline-none">
-          </div>
-
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">CPF / CNPJ do Cliente *</label>
-            <input type="text" id="clientCnpj" value="18.825.608/0001-10" class="w-full px-3 py-2 rounded border border-slate-300 focus:ring-1 focus:ring-blue-500 outline-none">
-          </div>
-
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Telefone do Cliente</label>
-            <input type="text" id="clientPhone" value="(85) 3133-6700" class="w-full px-3 py-2 rounded border border-slate-300 focus:ring-1 focus:ring-blue-500 outline-none">
-          </div>
-
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">E-mail do Cliente</label>
-            <input type="email" id="clientEmail" value="" placeholder="contato@cliente.com" class="w-full px-3 py-2 rounded border border-slate-300 focus:ring-1 focus:ring-blue-500 outline-none">
-          </div>
-
-          <!-- Informações da Atividade -->
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Para (Técnico Responsável) *</label>
-            <input type="text" id="techLeader" value="Harlysson Sousa" class="w-full font-semibold px-3 py-2 rounded border border-slate-300 focus:ring-1 focus:ring-blue-500 outline-none">
+            <label class="field-label">Código Externo</label>
+            <input type="text" id="externalCode" placeholder="Opcional" class="field-input">
           </div>
 
           <div class="sm:col-span-2">
-            <label class="block font-bold text-slate-700 mb-1">Tipo da Tarefa *</label>
-            <input type="text" id="osType" value="Manutenção Preventiva/ Corretiva" class="w-full px-3 py-2 rounded border border-slate-300 focus:ring-1 focus:ring-blue-500 outline-none">
+            <label class="field-label">Falar com (cliente) *</label>
+            <input type="text" id="clientName" value="CONDOMINIO LANDSCAPE" class="field-input">
+          </div>
+          <div>
+            <label class="field-label">CPF / CNPJ do cliente</label>
+            <input type="text" id="clientCnpj" value="18.825.608/0001-10" class="field-input">
+          </div>
+          <div>
+            <label class="field-label">Telefone do cliente</label>
+            <input type="text" id="clientPhone" value="(85) 3133-6700" class="field-input">
+          </div>
+          <div>
+            <label class="field-label">E-mail do cliente</label>
+            <input type="email" id="clientEmail" placeholder="contato@cliente.com" class="field-input">
           </div>
 
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Data / Horário Previsto</label>
-            <input type="text" id="plannedDate" value="30/10/2026 às 08:00" class="w-full px-3 py-2 rounded border border-slate-300 focus:ring-1 focus:ring-blue-500 outline-none">
+            <label class="field-label">Técnico responsável *</label>
+            <input type="text" id="techLeader" value="Harlysson Sousa" class="field-input">
           </div>
-
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Horário de Chegada</label>
-            <input type="text" id="arrivalTime" value="30/10/2026 às 07:50:46" class="w-full px-3 py-2 rounded border border-slate-300 focus:ring-1 focus:ring-blue-500 outline-none">
-          </div>
-
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Check-In *</label>
-            <input type="text" id="checkinTime" value="30/10/2026 às 07:51:34" class="w-full px-3 py-2 rounded border border-slate-300 focus:ring-1 focus:ring-blue-500 outline-none">
-          </div>
-
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Check-Out *</label>
-            <input type="text" id="checkoutTime" value="31/10/2026 às 07:50:40" class="w-full px-3 py-2 rounded border border-slate-300 focus:ring-1 focus:ring-blue-500 outline-none">
-          </div>
-
           <div class="sm:col-span-2">
-            <label class="block font-bold text-slate-700 mb-1">Status de Finalização</label>
-            <input type="text" id="finalizedStatus" value="Finalizada manualmente" class="w-full px-3 py-2 rounded border border-slate-300 focus:ring-1 focus:ring-blue-500 outline-none">
+            <label class="field-label">Tipo de tarefa *</label>
+            <input type="text" id="osType" value="Manutenção Preventiva/ Corretiva" class="field-input">
+          </div>
+
+          <div>
+            <label class="field-label">Data / Hora prevista</label>
+            <input type="text" id="plannedDate" value="30/10/2026 às 08:00" class="field-input">
+          </div>
+          <div>
+            <label class="field-label">Chegada</label>
+            <input type="text" id="arrivalTime" value="30/10/2026 às 07:50:46" class="field-input">
+          </div>
+          <div>
+            <label class="field-label">Check-In *</label>
+            <input type="text" id="checkinTime" value="30/10/2026 às 07:51:34" class="field-input">
+          </div>
+          <div>
+            <label class="field-label">Check-Out *</label>
+            <input type="text" id="checkoutTime" value="31/10/2026 às 07:50:40" class="field-input">
+          </div>
+          <div class="sm:col-span-2">
+            <label class="field-label">Status de finalização</label>
+            <input type="text" id="finalizedStatus" value="Finalizada manualmente" class="field-input">
           </div>
 
           <div class="sm:col-span-2 lg:col-span-4">
-            <label class="block font-bold text-slate-700 mb-1">Endereço da Ocorrência *</label>
-            <input type="text" id="siteAddress" value="AVENIDA ABOLICAO, 2311, MEIRELES, FORTALEZA, CE, 60.165-082" class="w-full px-3 py-2 rounded border border-slate-300 focus:ring-1 focus:ring-blue-500 outline-none">
+            <label class="field-label">Endereço da ocorrência *</label>
+            <input type="text" id="siteAddress"
+              value="AVENIDA ABOLICAO, 2311, MEIRELES, FORTALEZA, CE, 60.165-082" class="field-input">
           </div>
-
           <div class="sm:col-span-2">
-            <label class="block font-bold text-slate-700 mb-1">Orientação / Plano</label>
-            <input type="text" id="scopeDescription" value="Plano de Manutenção - 2x semanais (8xmês)" class="w-full px-3 py-2 rounded border border-slate-300 focus:ring-1 focus:ring-blue-500 outline-none">
+            <label class="field-label">Orientação / Plano</label>
+            <input type="text" id="scopeDescription"
+              value="Plano de Manutenção - 2x semanais (8xmês)" class="field-input">
           </div>
-
           <div class="sm:col-span-2">
-            <label class="block font-bold text-slate-700 mb-1">Relato de Execução Geral</label>
-            <input type="text" id="generalExecutionReport" value="" placeholder="Opcional" class="w-full px-3 py-2 rounded border border-slate-300 focus:ring-1 focus:ring-blue-500 outline-none">
+            <label class="field-label">Relato de execução geral</label>
+            <input type="text" id="generalExecutionReport" placeholder="Opcional" class="field-input">
           </div>
 
         </div>
       </section>
 
-      <!-- ================= 3. QUESTIONÁRIOS / DEMANDAS E FOTOS DO ANTES E DEPOIS ================= -->
-      <section class="bg-white rounded-xl border border-slate-300 shadow-sm overflow-hidden">
-        <div class="bg-slate-800 text-white px-4 py-3 flex items-center justify-between border-b border-slate-700">
-          <div class="flex items-center gap-2">
-            <i data-lucide="camera" class="w-4 h-4 text-amber-400"></i>
-            <h2 class="text-sm font-bold uppercase tracking-wider">3. Questionários de Manutenção & Fotos ("Antes e Depois")</h2>
-          </div>
-
-          <button type="button" onclick="addDemandBlock()" class="px-3 py-1.5 text-xs font-bold bg-amber-400 hover:bg-amber-300 text-slate-950 rounded transition flex items-center gap-1">
+      <!-- =========================================================
+           SEÇÃO 3 — DEMANDAS E FOTOS
+      ========================================================= -->
+      <section class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div class="section-header">
+          <span class="section-title">Demandas & fotos</span>
+          <button type="button" onclick="addDemandBlock()"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-md transition-colors">
             <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-            <span>Nova Demanda</span>
+            Nova demanda
           </button>
         </div>
 
-        <div class="p-4 sm:p-5 space-y-5">
-          <div id="demandBlocksContainer" class="space-y-5">
-            <!-- Blocos renderizados dinamicamente via JS -->
-          </div>
+        <div class="p-5 space-y-4">
+          <div id="demandBlocksContainer" class="space-y-4"></div>
 
-          <div class="pt-2 flex justify-center">
-            <button type="button" onclick="addDemandBlock()" class="px-4 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition flex items-center gap-1.5">
-              <i data-lucide="plus-circle" class="w-4 h-4 text-blue-600"></i>
-              Adicionar Outra Demanda / Questionário
-            </button>
+          <button type="button" onclick="addDemandBlock()"
+            class="w-full py-2.5 text-xs text-gray-500 hover:text-gray-700 border border-dashed border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            Adicionar outra demanda
+          </button>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           SEÇÃO 4 — ASSINATURA
+      ========================================================= -->
+      <section class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div class="section-header">
+          <span class="section-title">Assinatura do cliente</span>
+          <button type="button" onclick="clearSignature()"
+            class="text-xs text-gray-400 hover:text-red-500 transition-colors">Limpar</button>
+        </div>
+
+        <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label class="field-label">Nome de quem assinou *</label>
+            <input type="text" id="signerName" value="gardenia"
+              class="field-input" oninput="updateSignatureLabel(this.value)">
+            <p class="mt-1.5 text-[11px] text-gray-400">
+              Vai aparecer como: <strong id="sigPreviewLabel" class="text-gray-600">Assinado por: gardenia</strong>
+            </p>
+          </div>
+          <div>
+            <label class="field-label">Assinatura (touch ou mouse)</label>
+            <div class="border border-gray-200 rounded-lg bg-gray-50 overflow-hidden">
+              <canvas id="sigCanvas" width="400" height="90"
+                class="w-full h-24 cursor-crosshair touch-none"></canvas>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- ================= 4. ASSINATURA E ENCERRAMENTO ================= -->
-      <section class="bg-white rounded-xl border border-slate-300 shadow-sm overflow-hidden">
-        <div class="bg-slate-800 text-white px-4 py-3 flex items-center gap-2 border-b border-slate-700">
-          <i data-lucide="pen-tool" class="w-4 h-4 text-amber-400"></i>
-          <h2 class="text-sm font-bold uppercase tracking-wider">4. Assinatura do Cliente / Aceite no Local</h2>
-        </div>
-
-        <div class="p-4 sm:p-5 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Nome de Quem Assinou *</label>
-            <input type="text" id="signerName" value="gardenia" placeholder="Ex: gardenia" class="w-full px-3 py-2 rounded border border-slate-300 focus:ring-1 focus:ring-blue-500 outline-none" oninput="updateSignatureLabel(this.value)">
-            <p class="text-[11px] text-slate-500 mt-1">Aparecerá abaixo da assinatura no relatório final como: <strong id="sigPreviewLabel">Assinado por: gardenia</strong></p>
-          </div>
-
-          <div>
-            <div class="flex items-center justify-between mb-1">
-              <label class="block font-bold text-slate-700">Desenho da Assinatura (Touch / Mouse)</label>
-              <button type="button" onclick="clearSignature()" class="text-rose-600 hover:underline text-[11px]">Limpar Assinatura</button>
-            </div>
-            <div class="border border-slate-300 rounded bg-white overflow-hidden shadow-inner">
-              <canvas id="sigCanvas" width="400" height="90" class="w-full h-24 cursor-crosshair touch-none"></canvas>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- BARRA DE AÇÃO INFERIOR -->
-      <div class="sticky bottom-3 z-30 bg-slate-900/95 backdrop-blur text-white p-3.5 rounded-xl shadow-xl border border-slate-700 flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span class="text-xs font-bold">Relatório no Formato Retrato A4 (Limpo Oficial)</span>
-        </div>
+      <!-- =========================================================
+           BARRA DE AÇÃO FIXA NO RODAPÉ
+      ========================================================= -->
+      <div class="sticky bottom-4 z-30 bg-white border border-gray-200 shadow-lg rounded-xl px-5 py-3 flex items-center justify-between gap-4">
+        <span class="text-xs text-gray-500 hidden sm:inline">Formato A4 Retrato · Padrão Espiral Engenharia</span>
 
         <div class="flex items-center gap-2">
-          <button type="button" onclick="previewPDF()" class="px-3.5 py-1.5 text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg transition flex items-center gap-1.5">
-            <i data-lucide="eye" class="w-4 h-4 text-cyan-400"></i>
-            <span>Visualizar</span>
+          <button type="button" onclick="previewPDF()"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-md transition-colors">
+            <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+            Visualizar
           </button>
-          <button type="button" onclick="generateAndDownloadPDF()" class="px-4 py-1.5 text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-lg transition flex items-center gap-1.5 shadow-md">
-            <i data-lucide="download" class="w-4 h-4"></i>
-            <span>Baixar PDF (A4 Retrato)</span>
+          <button type="button" onclick="generateAndDownloadPDF()"
+            class="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-white bg-gray-900 hover:bg-gray-700 rounded-md transition-colors">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            Baixar PDF
           </button>
-          <button type="button" onclick="openEmailModal()" class="px-3.5 py-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-500 rounded-lg transition flex items-center gap-1.5">
-            <i data-lucide="send" class="w-4 h-4"></i>
-            <span>Enviar E-mail</span>
+          <button type="button" onclick="openEmailModal()"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-md transition-colors">
+            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">Enviar por e-mail</span>
           </button>
         </div>
       </div>
@@ -429,84 +458,95 @@
     </form>
   </main>
 
-  <!-- ================= MODAL DE PRÉ-VISUALIZAÇÃO A4 RETRATO ================= -->
-  <div id="previewModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex-col">
-    <div class="h-14 bg-slate-900 border-b border-slate-700 px-4 flex items-center justify-between text-white shrink-0">
+  <!-- ============================================================
+       MODAL — PRÉ-VISUALIZAÇÃO A4 RETRATO
+  ============================================================ -->
+  <div id="previewModal" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden flex-col">
+    <!-- Barra do modal -->
+    <div class="h-12 bg-white border-b border-gray-200 px-5 flex items-center justify-between shrink-0">
       <div class="flex items-center gap-3">
-        <span class="text-amber-400 font-bold text-sm flex items-center gap-2">
-          <i data-lucide="file-text" class="w-4 h-4"></i> Pré-visualização A4 Retrato (210mm × 297mm)
-        </span>
-        <span id="previewPageCounter" class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">Calculando...</span>
+        <span class="text-sm font-semibold text-gray-800">Pré-visualização</span>
+        <span id="previewPageCounter" class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">—</span>
       </div>
-
       <div class="flex items-center gap-2">
-        <button type="button" onclick="generateAndDownloadPDF()" class="px-3 py-1.5 text-xs font-bold bg-amber-400 hover:bg-amber-300 text-slate-950 rounded transition flex items-center gap-1">
-          <i data-lucide="download" class="w-3.5 h-3.5"></i> Baixar PDF
+        <button type="button" onclick="generateAndDownloadPDF()"
+          class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white bg-gray-900 hover:bg-gray-700 rounded-md transition-colors">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i> Baixar
         </button>
-        <button type="button" onclick="closePreviewModal()" class="p-1.5 text-slate-400 hover:text-white rounded transition">
+        <button type="button" onclick="closePreviewModal()"
+          class="p-1.5 text-gray-400 hover:text-gray-700 rounded transition-colors">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
     </div>
-
-    <div class="flex-1 overflow-auto p-4 sm:p-8 flex flex-col items-center gap-6 technical-grid bg-slate-800/50">
-      <div id="previewContainer" class="flex flex-col items-center gap-6">
-        <!-- Páginas injetadas via JS -->
-      </div>
+    <!-- Área de scroll -->
+    <div class="flex-1 overflow-auto preview-bg p-6 flex flex-col items-center gap-6">
+      <div id="previewContainer" class="flex flex-col items-center gap-6"></div>
     </div>
   </div>
 
-  <!-- ================= MODAL DE E-MAIL SERVERLESS ================= -->
-  <div id="emailModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white rounded-xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-300">
-      <div class="bg-slate-900 text-white p-4 flex items-center justify-between">
-        <h3 class="text-sm font-bold flex items-center gap-2">
-          <i data-lucide="send" class="w-4 h-4 text-blue-400"></i> Enviar Relatório por E-mail
-        </h3>
-        <button type="button" onclick="closeEmailModal()" class="text-slate-400 hover:text-white">
+  <!-- ============================================================
+       MODAL — ENVIO DE E-MAIL
+  ============================================================ -->
+  <div id="emailModal" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white rounded-xl max-w-md w-full overflow-hidden shadow-xl border border-gray-200">
+
+      <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <h3 class="text-sm font-semibold text-gray-900">Enviar relatório por e-mail</h3>
+        <button type="button" onclick="closeEmailModal()" class="text-gray-400 hover:text-gray-700">
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
 
-      <div class="p-4 space-y-3 text-xs">
+      <div class="p-5 space-y-3.5">
         <div>
-          <label class="block font-bold text-slate-700 mb-1">E-mail do Destinatário (Cliente) *</label>
-          <input type="email" id="modalDestEmail" class="w-full px-3 py-2 rounded border border-slate-300 outline-none">
+          <label class="field-label">Destinatário *</label>
+          <input type="email" id="modalDestEmail" class="field-input">
         </div>
         <div>
-          <label class="block font-bold text-slate-700 mb-1">Cópia (Arquivo da Empresa)</label>
-          <input type="email" id="modalCcEmail" value="adm.financeiro@espiraleletrica.com" class="w-full px-3 py-2 rounded border border-slate-300 outline-none">
+          <label class="field-label">Cópia (backup da empresa)</label>
+          <input type="email" id="modalCcEmail" value="adm.financeiro@espiraleletrica.com" class="field-input">
         </div>
 
-        <div class="pt-2 border-t border-slate-200">
-          <button type="button" onclick="toggleEmailConfig()" class="text-blue-600 hover:underline">Configurar Chaves EmailJS</button>
-          <div id="emailConfigBox" class="mt-2 p-2.5 bg-slate-50 border border-slate-200 rounded space-y-2 hidden">
+        <div class="pt-1 border-t border-gray-100">
+          <button type="button" onclick="toggleEmailConfig()"
+            class="text-xs text-gray-500 hover:text-gray-800 transition-colors">
+            Configurar chaves EmailJS →
+          </button>
+          <div id="emailConfigBox" class="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg space-y-2.5 hidden">
             <div>
-              <label class="block text-[10px] font-bold text-slate-600">Service ID</label>
-              <input type="text" id="emailjsServiceId" class="w-full text-xs px-2 py-1 rounded border border-slate-300">
+              <label class="field-label">Service ID</label>
+              <input type="text" id="emailjsServiceId" class="field-input text-xs">
             </div>
             <div>
-              <label class="block text-[10px] font-bold text-slate-600">Template ID</label>
-              <input type="text" id="emailjsTemplateId" class="w-full text-xs px-2 py-1 rounded border border-slate-300">
+              <label class="field-label">Template ID</label>
+              <input type="text" id="emailjsTemplateId" class="field-input text-xs">
             </div>
             <div>
-              <label class="block text-[10px] font-bold text-slate-600">Public Key</label>
-              <input type="text" id="emailjsPublicKey" class="w-full text-xs px-2 py-1 rounded border border-slate-300">
+              <label class="field-label">Public Key</label>
+              <input type="text" id="emailjsPublicKey" class="field-input text-xs">
             </div>
-            <button type="button" onclick="saveEmailConfig()" class="w-full py-1 text-xs bg-slate-800 text-white font-bold rounded">Salvar</button>
+            <button type="button" onclick="saveEmailConfig()"
+              class="w-full py-1.5 text-xs font-medium text-white bg-gray-900 hover:bg-gray-700 rounded-md transition-colors">
+              Salvar
+            </button>
           </div>
         </div>
       </div>
 
-      <div class="bg-slate-50 p-3 border-t border-slate-200 flex justify-end gap-2">
-        <button type="button" onclick="closeEmailModal()" class="px-3 py-1.5 text-xs text-slate-600 font-semibold">Cancelar</button>
-        <button type="button" onclick="sendViaMailtoClient()" class="px-3 py-1.5 text-xs font-semibold bg-white border border-slate-300 rounded text-slate-700 hover:bg-slate-100 flex items-center gap-1">
+      <div class="px-5 py-3.5 border-t border-gray-100 flex items-center justify-end gap-2">
+        <button type="button" onclick="closeEmailModal()"
+          class="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-800 transition-colors">Cancelar</button>
+        <button type="button" onclick="sendViaMailtoClient()"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-md transition-colors">
           <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Mailto
         </button>
-        <button type="button" onclick="sendViaVercelServerless()" id="btn-send-serverless" class="px-3.5 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 rounded flex items-center gap-1">
-          <i data-lucide="paperclip" class="w-3.5 h-3.5"></i> Serverless + PDF
+        <button type="button" onclick="sendViaVercelServerless()" id="btn-send-serverless"
+          class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-gray-900 hover:bg-gray-700 rounded-md transition-colors">
+          <i data-lucide="paperclip" class="w-3.5 h-3.5"></i> Enviar com PDF
         </button>
       </div>
+
     </div>
   </div>
 
@@ -532,7 +572,7 @@
     let sigPad = null;
 
     // Toast
-    function showToast(message, icon = "⚡", isError = false) {
+    function showToast(message, icon = "✓", isError = false) {
       const toast = document.getElementById("toast");
       const toastMsg = document.getElementById("toast-msg");
       const toastIcon = document.getElementById("toast-icon");
@@ -540,14 +580,14 @@
 
       toastMsg.innerText = message;
       toastIcon.innerText = icon;
-      toastBody.className = isError 
-        ? "bg-rose-900 text-white px-5 py-3 rounded-xl shadow-2xl border border-rose-700 flex items-center gap-3"
-        : "bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-3";
+      toastBody.className = isError
+        ? "bg-red-600 text-white px-4 py-2.5 rounded-lg shadow-lg border border-red-700 flex items-center gap-2"
+        : "bg-gray-900 text-white px-4 py-2.5 rounded-lg shadow-lg border border-gray-800 flex items-center gap-2";
 
-      toast.classList.remove("translate-y-20", "opacity-0", "pointer-events-none");
+      toast.classList.remove("translate-y-16", "opacity-0", "pointer-events-none");
       setTimeout(() => {
-        toast.classList.add("translate-y-20", "opacity-0", "pointer-events-none");
-      }, 3500);
+        toast.classList.add("translate-y-16", "opacity-0", "pointer-events-none");
+      }, 3200);
     }
 
     // Logo & Empresa
@@ -739,41 +779,41 @@
 
       demandBlocks.forEach((block, index) => {
         const div = document.createElement("div");
-        div.className = "p-4 rounded-lg border border-slate-300 bg-slate-50 space-y-3";
+        div.className = "p-4 rounded-lg border border-gray-200 bg-white space-y-3";
         div.innerHTML = `
-          <div class="flex items-center justify-between border-b border-slate-300 pb-2">
-            <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-              <span class="w-5 h-5 rounded bg-slate-800 text-white flex items-center justify-center text-[10px] font-black">${index + 1}</span>
+          <div class="flex items-center justify-between border-b border-gray-100 pb-2.5">
+            <span class="text-xs font-semibold text-gray-800 flex items-center gap-2">
+              <span class="w-5 h-5 rounded bg-gray-900 text-white flex items-center justify-center text-[10px] font-bold shrink-0">${index + 1}</span>
               ${escapeHtml(block.questionnaire)}
             </span>
-            <button type="button" onclick="removeDemandBlock(${block.id})" class="text-rose-600 hover:text-rose-700 text-xs font-semibold">Excluir</button>
+            <button type="button" onclick="removeDemandBlock(${block.id})" class="text-xs text-gray-400 hover:text-red-600 transition-colors font-medium ml-2 shrink-0">Excluir</button>
           </div>
 
-          <div class="space-y-2 text-xs">
+          <div class="space-y-2.5 text-xs">
             <div>
-              <label class="block font-bold text-slate-700 mb-0.5">Descrição da demanda *</label>
-              <input type="text" value="${escapeHtml(block.description)}" onchange="updateDemandField(${block.id}, 'description', this.value)" placeholder="Ex: Poste esta sem funcionamento no jardim" class="w-full px-3 py-1.5 rounded border border-slate-300 bg-white outline-none">
+              <label class="field-label">Descrição da demanda *</label>
+              <input type="text" value="${escapeHtml(block.description)}" onchange="updateDemandField(${block.id}, 'description', this.value)" placeholder="Ex: Poste sem funcionamento no jardim" class="field-input text-xs">
             </div>
 
             <div>
-              <label class="block font-bold text-slate-700 mb-0.5">Observação do Técnico</label>
-              <textarea rows="2" onchange="updateDemandField(${block.id}, 'observation', this.value)" placeholder="Ex: Após correção elétrica voltou a funcionar normalmente" class="w-full px-3 py-1.5 rounded border border-slate-300 bg-white outline-none">${escapeHtml(block.observation)}</textarea>
+              <label class="field-label">Observação do Técnico</label>
+              <textarea rows="2" onchange="updateDemandField(${block.id}, 'observation', this.value)" placeholder="Ex: Após correção elétrica voltou a funcionar normalmente" class="field-input text-xs resize-none">${escapeHtml(block.observation)}</textarea>
             </div>
 
             <div>
-              <div class="flex items-center justify-between mb-1.5">
-                <span class="font-bold text-slate-700">Fotos do antes e depois (${block.photos.length} fotos)</span>
-                <label class="px-2.5 py-1 text-[11px] font-semibold bg-slate-800 hover:bg-slate-700 text-white rounded cursor-pointer transition flex items-center gap-1">
-                  <i data-lucide="plus" class="w-3 h-3"></i> Adicionar Fotos
+              <div class="flex items-center justify-between mb-2">
+                <span class="field-label mb-0">Fotos antes / depois (${block.photos.length})</span>
+                <label class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded cursor-pointer transition">
+                  <i data-lucide="plus" class="w-3 h-3"></i> Adicionar fotos
                   <input type="file" multiple accept="image/*" class="hidden" onchange="handleDemandPhotosUpload(${block.id}, event)">
                 </label>
               </div>
 
               <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                 ${block.photos.map((p, pIdx) => `
-                  <div class="relative group h-20 bg-slate-200 border border-slate-300 rounded overflow-hidden">
+                  <div class="relative group h-20 bg-gray-100 border border-gray-200 rounded overflow-hidden">
                     <img src="${p.src}" class="w-full h-full object-cover">
-                    <button type="button" onclick="removeDemandPhoto(${block.id}, ${pIdx})" class="absolute top-1 right-1 bg-rose-600 text-white p-0.5 rounded-full shadow text-[10px]">
+                    <button type="button" onclick="removeDemandPhoto(${block.id}, ${pIdx})" class="absolute top-1 right-1 bg-gray-900 hover:bg-red-600 text-white p-0.5 rounded shadow text-[10px] transition-colors">
                       <i data-lucide="x" class="w-3 h-3"></i>
                     </button>
                   </div>
